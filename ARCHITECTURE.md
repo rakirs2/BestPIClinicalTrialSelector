@@ -65,3 +65,12 @@ Analytics / .NET services consume tabular views
 - **Observability**: structured logging, ingest run metadata, ability to resume via `--resume-run <uuid>`.
 
 The ingestion layer will eventually feed the .NET scoring/ranking engine and Blazor UI once those components are scaffolded.
+
+### Aggregation Layer
+
+- **Investigator master/aggregation (phase 1)**: `investigator_topic_counts` table keyed by `investigators.id` stores JSON blobs with:
+  - `condition_counts`: `{ "Heart Failure": 12, ... }`
+  - `intervention_counts`: nested objects grouped by intervention type (DRUG/DEVICE/etc.).
+- **Aggregation job**: `python -m aggregations.investigator_topics` reads existing tables, groups by investigator, and upserts JSON counts. Optional `--limit` enables piloting on small subsets.
+- **Usage**: downstream analytics/scoring can query aggregated expertise per investigator without hitting raw tables repeatedly.
+- **Future**: once investigator master identities (ORCID/NCBI) are available, this table will migrate to those canonical IDs while retaining the JSON structure.

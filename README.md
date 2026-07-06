@@ -61,6 +61,37 @@ This repository is at the bootstrap stage. The current milestone focuses on a **
 
 GitHub Actions (`.github/workflows/tests.yml`) automatically installs dependencies and runs `pytest` on every push and pull request targeting `main`, ensuring the scraper stays green before merges.
 
+## Investigator Topic Aggregation
+
+Use the aggregation job to summarize condition/intervention experience per investigator (keyed by `investigators.id`).
+
+```bash
+python -m aggregations.investigator_topics --env-file .env aggregate          # all investigators
+python -m aggregations.investigator_topics --env-file .env aggregate --limit 10  # pilot subset
+python -m aggregations.investigator_topics --env-file .env count               # summary stats
+```
+
+JSON layout example for a single investigator:
+
+```json
+{
+  "condition_counts": {
+    "Heart Failure": 12,
+    "Cardiomyopathy": 5
+  },
+  "intervention_counts": {
+    "DRUG": {
+      "Sacubitril/Valsartan": 3
+    },
+    "DEVICE": {
+      "Left Ventricular Assist Device": 1
+    }
+  }
+}
+```
+
+A 10-investigator pilot completed in ~0.01 s on a dev laptop, implying a full refresh for ~75k investigators should finish in roughly 1–2 minutes.
+
 ## Proposed Architecture
 
 - **Ingestion layer**: Python ETL jobs that collect data from ClinicalTrials.gov (current milestone) with planned connectors for CTMS, EDC, and EU CTR.

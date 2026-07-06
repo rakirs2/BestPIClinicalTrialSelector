@@ -10,3 +10,4 @@ All notable changes to this project will be documented here. The format follows 
 - Python ClinicalTrials.gov scraper with async HTTP client, normalization layer, Postgres schema management, CLI runner, environment template, tests, and DB size guard.
 - GitHub Actions workflow to install dependencies and run `pytest` on pushes/PRs.
 - Checkpointable ingestion runs with resumable CLI (`--resume-latest`, `status` command), signal-aware shutdowns, and enhanced logging/documentation.
+- Investigator topic aggregation job (`python -m aggregations.investigator_topics`) plus `investigator_topic_counts` table storing JSON maps for conditions and intervention types.
