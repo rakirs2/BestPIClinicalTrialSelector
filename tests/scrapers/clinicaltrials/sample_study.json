@@ -1,0 +1,97 @@
+{
+  "protocolSection": {
+    "identificationModule": {
+      "nctId": "NCT00000001",
+      "briefTitle": "Sample Study",
+      "officialTitle": "Sample Official Title"
+    },
+    "statusModule": {
+      "overallStatus": "RECRUITING",
+      "startDateStruct": {"date": "2024-01-01"},
+      "completionDateStruct": {"date": "2026-12-01"},
+      "primaryCompletionDateStruct": {"date": "2025-06-01"},
+      "lastUpdatePostDateStruct": {"date": "2024-05-01"},
+      "lastUpdateSubmitDate": "2024-04-28",
+      "studyFirstPostDateStruct": {"date": "2024-02-01"},
+      "resultsFirstPostDateStruct": {"date": "2026-01-01"},
+      "statusVerifiedDate": "2024-04"
+    },
+    "designModule": {
+      "studyType": "INTERVENTIONAL",
+      "phases": ["PHASE2"],
+      "enrollmentInfo": {"count": 120, "type": "ESTIMATED"},
+      "designInfo": {
+        "allocation": "RANDOMIZED",
+        "interventionModel": "PARALLEL",
+        "maskingInfo": {"masking": "DOUBLE"},
+        "primaryPurpose": "TREATMENT"
+      }
+    },
+    "descriptionModule": {
+      "briefSummary": "Brief summary text"
+    },
+    "conditionsModule": {
+      "conditions": ["Condition A"],
+      "keywords": ["Keyword A"]
+    },
+    "armsInterventionsModule": {
+      "armGroups": [
+        {"label": "Arm A", "description": "Desc", "type": "EXPERIMENTAL"}
+      ],
+      "interventions": [
+        {
+          "type": "DRUG",
+          "name": "Drug A",
+          "description": "Description",
+          "armGroupLabels": ["Arm A"]
+        }
+      ]
+    },
+    "outcomesModule": {
+      "primaryOutcomes": [
+        {"measure": "Primary Measure", "description": "Desc", "timeFrame": "6 months"}
+      ]
+    },
+    "eligibilityModule": {
+      "eligibilityCriteria": "Criteria text",
+      "sex": "ALL",
+      "minimumAge": "18 Years",
+      "maximumAge": "75 Years",
+      "healthyVolunteers": false,
+      "studyPopulation": "Adults",
+      "samplingMethod": "PROBABILITY_SAMPLE"
+    },
+    "contactsLocationsModule": {
+      "overallOfficials": [
+        {"name": "Dr. Smith", "role": "PI", "affiliation": "Hospital"}
+      ],
+      "locations": [
+        {
+          "facility": "Hospital",
+          "status": "RECRUITING",
+          "city": "Boston",
+          "state": "MA",
+          "zip": "02115",
+          "country": "United States"
+        }
+      ],
+      "centralContacts": [
+        {"name": "Contact", "role": "PRIMARY", "phone": "555-5555", "email": "info@example.com"}
+      ]
+    }
+  },
+  "derivedSection": {
+    "conditionBrowseModule": {
+      "meshes": [{"term": "Mesh Term"}],
+      "ancestors": [{"term": "Ancestor Term"}]
+    }
+  },
+  "resultsSection": {
+    "outcomeMeasuresModule": {
+      "outcomeMeasures": [
+        {"title": "Outcome", "description": "Outcome description"}
+      ]
+    }
+  },
+  "hasResults": false
+}

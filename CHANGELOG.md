@@ -1,0 +1,10 @@
+# Changelog
+
+All notable changes to this project will be documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project aims to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- Initial project README outlining vision, objectives, and roadmap.
+- Documentation scaffolding for contributing guidelines, system operations, architecture overview, worklog, and changelog.
+- Python ClinicalTrials.gov scraper with async HTTP client, normalization layer, Postgres schema management, CLI runner, environment template, tests, and DB size guard.
