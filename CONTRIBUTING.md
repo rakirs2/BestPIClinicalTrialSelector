@@ -31,6 +31,7 @@ Thank you for helping build an agent-friendly clinical trial tooling platform. T
 - Never commit credentials or patient data; use environment variables or secret stores.
 - Prefer deterministic scripts/commands so agents can reproduce results reliably.
 - If introducing new dependencies, explain why and document installation steps (update `requirements.txt` + README when needed).
+- Ensure GitHub Actions tests stay green; CI runs `pytest` via `.github/workflows/tests.yml` on every push/PR to `main`.
 
 ## Agent-Specific Guidance
 

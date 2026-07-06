@@ -8,3 +8,4 @@ All notable changes to this project will be documented here. The format follows 
 - Initial project README outlining vision, objectives, and roadmap.
 - Documentation scaffolding for contributing guidelines, system operations, architecture overview, worklog, and changelog.
 - Python ClinicalTrials.gov scraper with async HTTP client, normalization layer, Postgres schema management, CLI runner, environment template, tests, and DB size guard.
+- GitHub Actions workflow to install dependencies and run `pytest` on pushes/PRs.

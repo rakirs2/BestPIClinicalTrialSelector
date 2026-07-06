@@ -39,6 +39,10 @@ This repository is at the bootstrap stage. The current milestone focuses on a **
    ```
    Tests currently cover the normalization pipeline; expand coverage as parsers evolve.
 
+## Continuous Integration
+
+GitHub Actions (`.github/workflows/tests.yml`) automatically installs dependencies and runs `pytest` on every push and pull request targeting `main`, ensuring the scraper stays green before merges.
+
 ## Proposed Architecture
 
 - **Ingestion layer**: Python ETL jobs that collect data from ClinicalTrials.gov (current milestone) with planned connectors for CTMS, EDC, and EU CTR.
