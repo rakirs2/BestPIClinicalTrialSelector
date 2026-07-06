@@ -23,6 +23,8 @@ SCHEMA_STATEMENTS: list[str] = [
         total_expected BIGINT,
         processed_count BIGINT NOT NULL DEFAULT 0,
         last_page_token TEXT,
+        current_chunk INTEGER NOT NULL DEFAULT 0,
+        last_error TEXT,
         notes TEXT
     )
     """,
@@ -200,6 +202,11 @@ class PostgresStorage:
         with self._conn.cursor() as cur:
             for statement in SCHEMA_STATEMENTS:
                 cur.execute(statement)
+            # Backfill columns when upgrading from previous schema versions.
+            cur.execute(
+                "ALTER TABLE ingest_runs ADD COLUMN IF NOT EXISTS current_chunk INTEGER NOT NULL DEFAULT 0"
+            )
+            cur.execute("ALTER TABLE ingest_runs ADD COLUMN IF NOT EXISTS last_error TEXT")
         self._conn.commit()
 
     def start_run(self, total_expected: int | None) -> uuid.UUID:
@@ -218,7 +225,11 @@ class PostgresStorage:
     def resume_run(self, run_id: uuid.UUID) -> Optional[dict]:
         with self._conn.cursor() as cur:
             cur.execute(
-                "SELECT id, status, processed_count, last_page_token FROM ingest_runs WHERE id = %s",
+                """
+                SELECT id, status, processed_count, last_page_token, current_chunk, notes
+                FROM ingest_runs
+                WHERE id = %s
+                """,
                 (run_id,),
             )
             row = cur.fetchone()
@@ -229,18 +240,27 @@ class PostgresStorage:
                 "status": row[1],
                 "processed_count": row[2],
                 "last_page_token": row[3],
+                "current_chunk": row[4] or 0,
+                "notes": row[5],
             }
 
-    def update_run_progress(self, run_id: uuid.UUID, processed_count: int, last_token: str | None) -> None:
+    def update_run_progress(
+        self,
+        run_id: uuid.UUID,
+        processed_count: int,
+        last_token: str | None,
+        current_chunk: int,
+    ) -> None:
         with self._conn.cursor() as cur:
             cur.execute(
                 """
                 UPDATE ingest_runs
                 SET processed_count = %s,
-                    last_page_token = %s
+                    last_page_token = %s,
+                    current_chunk = %s
                 WHERE id = %s
                 """,
-                (processed_count, last_token, run_id),
+                (processed_count, last_token, current_chunk, run_id),
             )
         self._conn.commit()
 
@@ -252,12 +272,76 @@ class PostgresStorage:
                 SET status = %s,
                     processed_count = %s,
                     finished_at = NOW(),
-                    notes = %s
+                    notes = %s,
+                    last_error = NULL
                 WHERE id = %s
                 """,
                 (status, processed_count, notes, run_id),
             )
         self._conn.commit()
+
+    def record_failure(self, run_id: uuid.UUID, processed_count: int, error: str) -> None:
+        with self._conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE ingest_runs
+                SET status = %s,
+                    processed_count = %s,
+                    finished_at = NOW(),
+                    last_error = %s
+                WHERE id = %s
+                """,
+                ("failed", processed_count, error[:8000], run_id),
+            )
+        self._conn.commit()
+
+    def list_runs(self, limit: int = 10) -> list[dict]:
+        with self._conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, status, started_at, finished_at, processed_count, current_chunk, last_page_token, notes
+                FROM ingest_runs
+                ORDER BY started_at DESC
+                LIMIT %s
+                """,
+                (limit,),
+            )
+            rows = cur.fetchall()
+        return [
+            {
+                "id": row[0],
+                "status": row[1],
+                "started_at": row[2],
+                "finished_at": row[3],
+                "processed_count": row[4],
+                "current_chunk": row[5],
+                "last_page_token": row[6],
+                "notes": row[7],
+            }
+            for row in rows
+        ]
+
+    def get_latest_incomplete_run(self) -> Optional[dict]:
+        with self._conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, status, processed_count, last_page_token, current_chunk
+                FROM ingest_runs
+                WHERE status NOT IN ('completed')
+                ORDER BY started_at DESC
+                LIMIT 1
+                """
+            )
+            row = cur.fetchone()
+        if row is None:
+            return None
+        return {
+            "id": row[0],
+            "status": row[1],
+            "processed_count": row[2],
+            "last_page_token": row[3],
+            "current_chunk": row[4] or 0,
+        }
 
     def current_db_size_gb(self) -> float:
         with self._conn.cursor() as cur:

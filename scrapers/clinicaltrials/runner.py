@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+import signal
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -17,19 +18,27 @@ from .transform import normalize_full_study
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Ingest ClinicalTrials.gov studies into Postgres")
-    parser.add_argument("command", choices=["full-sync"], help="Currently supported command")
+    parser = argparse.ArgumentParser(description="ClinicalTrials.gov ingestion toolkit")
     parser.add_argument("--env-file", dest="env_file", help="Optional path to .env file")
     parser.add_argument("--dsn", dest="postgres_dsn", help="Override Postgres DSN")
-    parser.add_argument("--since", dest="since", help="Optional ISO date for incremental mode")
-    parser.add_argument("--resume-run", dest="resume_run", help="Resume from existing ingest_run UUID")
-    parser.add_argument("--max-chunks", dest="max_chunks", type=int, help="Limit number of API chunks (testing)")
     parser.add_argument(
         "--log-level",
         dest="log_level",
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
     )
+
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    sync_parser = subparsers.add_parser("full-sync", help="Stream all studies into Postgres")
+    sync_parser.add_argument("--since", dest="since", help="Optional ISO date for incremental mode")
+    sync_parser.add_argument("--resume-run", dest="resume_run", help="Resume from specific ingest_run UUID")
+    sync_parser.add_argument("--resume-latest", action="store_true", help="Resume the most recent unfinished run")
+    sync_parser.add_argument("--max-chunks", dest="max_chunks", type=int, help="Limit number of API chunks (testing)")
+
+    status_parser = subparsers.add_parser("status", help="Show ingest run history")
+    status_parser.add_argument("--limit", type=int, default=5, help="Number of runs to display")
+
     return parser
 
 
@@ -38,12 +47,17 @@ def load_settings(args: argparse.Namespace) -> ScraperSettings:
     overrides = {}
     if args.postgres_dsn:
         overrides["postgres_dsn"] = args.postgres_dsn
-    if args.since:
-        overrides["since"] = args.since
-    if args.max_chunks:
-        overrides["max_chunks"] = args.max_chunks
-    if args.resume_run:
-        overrides["resume_run_id"] = args.resume_run
+    since = getattr(args, "since", None)
+    if since:
+        overrides["since"] = since
+    max_chunks = getattr(args, "max_chunks", None)
+    if max_chunks:
+        overrides["max_chunks"] = max_chunks
+    resume_run = getattr(args, "resume_run", None)
+    if resume_run:
+        overrides["resume_run_id"] = resume_run
+    if hasattr(args, "resume_latest") and args.resume_latest:
+        overrides["resume_latest"] = bool(args.resume_latest)
     if args.log_level:
         overrides["log_level"] = args.log_level
     if overrides:
@@ -65,6 +79,9 @@ async def full_sync(settings: ScraperSettings) -> None:
     resume_run_id = _parse_uuid(settings.resume_run_id) if settings.resume_run_id else None
     processed = 0
     start_token: Optional[str] = None
+    chunk_index = 0
+
+    run_snapshot = None
     if resume_run_id:
         run_snapshot = storage.resume_run(resume_run_id)
         if not run_snapshot:
@@ -72,18 +89,36 @@ async def full_sync(settings: ScraperSettings) -> None:
             await client.close()
             storage.close()
             sys.exit(1)
+    elif settings.resume_latest:
+        run_snapshot = storage.get_latest_incomplete_run()
+
+    if run_snapshot:
+        if run_snapshot["status"] == "completed":
+            logging.info("Run %s already completed", run_snapshot["id"])
+            await client.close()
+            storage.close()
+            return
         processed = run_snapshot["processed_count"] or 0
         start_token = run_snapshot["last_page_token"]
-        run_id = resume_run_id
-        logging.info("Resuming run %s from processed=%s", run_id, processed)
+        chunk_index = run_snapshot.get("current_chunk", 0) or 0
+        run_id = run_snapshot["id"]
+        if isinstance(run_id, str):
+            run_id = uuid.UUID(run_id)
+        logging.info(
+            "Resuming run %s from processed=%s chunk=%s", run_id, processed, chunk_index
+        )
     else:
         run_id = storage.start_run(total_expected=None)
+        logging.info("Created new run %s", run_id)
+
+    stop_event = asyncio.Event()
+    _install_signal_handlers(stop_event)
 
     try:
-        await _ingest_loop(settings, client, storage, run_id, processed, start_token)
+        await _ingest_loop(settings, client, storage, run_id, processed, start_token, chunk_index, stop_event)
     except Exception as exc:  # noqa: BLE001
         logging.exception("Ingest failed: %s", exc)
-        storage.finish_run(run_id, "failed", processed, str(exc))
+        storage.record_failure(run_id, processed, str(exc))
         raise
     finally:
         await client.close()
@@ -97,10 +132,17 @@ async def _ingest_loop(
     run_id: uuid.UUID,
     processed_start: int,
     start_token: Optional[str],
+    chunk_start: int,
+    stop_event: asyncio.Event,
 ) -> None:
     processed = processed_start
     next_token = start_token
-    chunk_index = 0
+    chunk_index = chunk_start
+
+    if processed > 0 and not next_token:
+        storage.finish_run(run_id, "completed", processed, "No next page token; assuming complete")
+        logging.info("Run %s already ingested %s studies", run_id, processed)
+        return
 
     # Fetch initial page
     page = await client.fetch_page(next_token, since=settings.since)
@@ -110,6 +152,12 @@ async def _ingest_loop(
         return
 
     while True:
+        if stop_event.is_set():
+            note = "Stopped via signal"
+            storage.finish_run(run_id, "stopped_manual", processed, note)
+            logging.warning(note)
+            return
+
         chunk_index += 1
         fetched_at = datetime.now(timezone.utc)
         normalized = []
@@ -120,8 +168,14 @@ async def _ingest_loop(
                 logging.error("Failed to normalize study: %s", parse_exc, exc_info=True)
         storage.upsert_batch(normalized)
         processed += len(normalized)
-        storage.update_run_progress(run_id, processed, page.next_page_token)
+        storage.update_run_progress(run_id, processed, page.next_page_token, chunk_index)
         logging.info("Processed %s studies (chunk %s)", processed, chunk_index)
+
+        if stop_event.is_set():
+            note = "Stopped via signal"
+            storage.finish_run(run_id, "stopped_manual", processed, note)
+            logging.warning(note)
+            return
 
         db_size = storage.current_db_size_gb()
         if db_size >= settings.db_size_limit_gb:
@@ -156,13 +210,48 @@ def configure_logging(level: str) -> None:
     )
 
 
+def _install_signal_handlers(stop_event: asyncio.Event) -> None:
+    try:
+        loop = asyncio.get_running_loop()
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            loop.add_signal_handler(sig, stop_event.set)
+    except NotImplementedError:
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            signal.signal(sig, lambda *_: stop_event.set())
+
+
+def print_status(settings: ScraperSettings, limit: int) -> None:
+    storage = PostgresStorage(settings.postgres_dsn)
+    storage.ensure_schema()
+    rows = storage.list_runs(limit)
+    storage.close()
+
+    if not rows:
+        print("No ingest runs recorded yet.")
+        return
+
+    for row in rows:
+        finished = row["finished_at"].isoformat() if row["finished_at"] else "-"
+        print(
+            f"{row['id']} | status={row['status']} | processed={row['processed_count']} | "
+            f"chunk={row['current_chunk']} | started={row['started_at'].isoformat()} | finished={finished}"
+        )
+        if row.get("notes"):
+            print(f"  notes: {row['notes']}")
+
+
 def main() -> None:
     parser = build_arg_parser()
     args = parser.parse_args()
+    configure_logging(args.log_level)
+
+    if args.command == "status":
+        settings = load_settings(args)
+        print_status(settings, args.limit)
+        return
+
     settings = load_settings(args)
-    configure_logging(settings.log_level)
-    if args.command == "full-sync":
-        asyncio.run(full_sync(settings))
+    asyncio.run(full_sync(settings))
 
 
 if __name__ == "__main__":

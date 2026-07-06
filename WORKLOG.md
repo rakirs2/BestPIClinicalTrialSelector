@@ -9,6 +9,7 @@ Use this file to track medium-to-large tasks, their owners, and status. Update i
 | 2026-07-06 | Maintainer                | Identify first clinical data source to ingest  | completed | ClinicalTrials.gov selected; ingestion pipeline implemented locally. |
 | 2026-07-06 | OpenCode (gpt-5.1-codex)  | Build Python ClinicalTrials.gov scraper w/ Postgres schema | completed | Added async fetcher, normalization, Postgres persistence, DB size guard, tests. |
 | 2026-07-06 | OpenCode (gpt-5.1-codex)  | Wire up CI to run pytest on pushes/PRs                     | completed | Added `.github/workflows/tests.yml` and documented CI expectations. |
+| 2026-07-06 | OpenCode (gpt-5.1-codex)  | Make scraper checkpointable/resumable with CLI status      | completed | Added signal-aware shutdown, resume flags, status command, and documentation. |
 | 2026-07-06 | Maintainer or delegate    | Define MVP PI scoring heuristic                | pending   | Capture scoring dimensions and weighting approach. |
 | 2026-07-06 | Maintainer or delegate    | Prototype feasibility review UI                | pending   | Outline wireframes and data surfacing requirements. |
 

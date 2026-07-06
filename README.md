@@ -23,6 +23,7 @@ This repository is at the bootstrap stage. The current milestone focuses on a **
    - Local PostgreSQL instance (Docker or native). Create an empty database, e.g. `clinicaltrials`.
 3. **Configure environment**
    - Copy `.env.example` to `.env` and update `POSTGRES_DSN` plus optional tuning values.
+   - Set `RESUME_LATEST=true` if you’d like the scraper to automatically pick up the most recent unfinished run.
    - Create a virtual environment and install dependencies:
      ```bash
      python3 -m venv .venv
@@ -30,7 +31,7 @@ This repository is at the bootstrap stage. The current milestone focuses on a **
      ```
 4. **Run the scraper**
    ```bash
-   python -m scrapers.clinicaltrials.runner full-sync --env-file .env
+   python -m scrapers.clinicaltrials.runner --env-file .env full-sync
    ```
    The command streams every study through the v2 ClinicalTrials.gov API, stores the raw JSON payload plus tabularized data, and halts automatically if the database exceeds the configured size limit (default 10 GB). Progress is tracked in the `ingest_runs` table.
 5. **Run tests**
@@ -38,6 +39,23 @@ This repository is at the bootstrap stage. The current milestone focuses on a **
    .venv/bin/pytest
    ```
    Tests currently cover the normalization pipeline; expand coverage as parsers evolve.
+
+### Resuming & Monitoring
+
+- View recent ingest runs (status, processed count, notes):
+  ```bash
+  python -m scrapers.clinicaltrials.runner --env-file .env status --limit 10
+  ```
+- Resume the latest incomplete run or a specific run ID:
+  ```bash
+  python -m scrapers.clinicaltrials.runner --env-file .env full-sync --resume-latest
+  python -m scrapers.clinicaltrials.runner --env-file .env full-sync --resume-run <run_uuid>
+  ```
+- To run unattended, use your preferred supervisor or a simple `nohup` invocation:
+  ```bash
+  nohup python -m scrapers.clinicaltrials.runner --env-file .env full-sync --resume-latest > scraper.log 2>&1 &
+  ```
+  The process can be stopped with `kill <pid>`; rerun with `--resume-latest` to continue from the saved checkpoint.
 
 ## Continuous Integration
 
