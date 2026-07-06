@@ -72,5 +72,5 @@ The ingestion layer will eventually feed the .NET scoring/ranking engine and Bla
   - `condition_counts`: `{ "Heart Failure": 12, ... }`
   - `intervention_counts`: nested objects grouped by intervention type (DRUG/DEVICE/etc.).
 - **Aggregation job**: `python -m aggregations.investigator_topics` reads existing tables, groups by investigator, and upserts JSON counts. Optional `--limit` enables piloting on small subsets.
-- **Usage**: downstream analytics/scoring can query aggregated expertise per investigator without hitting raw tables repeatedly.
+- **Usage**: downstream analytics/scoring can query aggregated expertise per investigator without hitting raw tables repeatedly. The same CLI exposes a `recommend` subcommand that takes a condition or intervention and returns the top investigators using phase-weighted, exponentially decayed recency scores.
 - **Future**: once investigator master identities (ORCID/NCBI) are available, this table will migrate to those canonical IDs while retaining the JSON structure.
