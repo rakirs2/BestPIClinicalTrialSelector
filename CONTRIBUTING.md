@@ -32,6 +32,7 @@ Thank you for helping build an agent-friendly clinical trial tooling platform. T
 - Prefer deterministic scripts/commands so agents can reproduce results reliably.
 - If introducing new dependencies, explain why and document installation steps (update `requirements.txt` + README when needed).
 - Ensure GitHub Actions tests stay green; CI runs `pytest` via `.github/workflows/tests.yml` on every push/PR to `main`.
+- Use `python -m scrapers.clinicaltrials.runner full-sync --resume-latest` to pick up interrupted long-running ingests, and `python -m scrapers.clinicaltrials.runner status` to inspect run history before/after changes.
 
 ## Agent-Specific Guidance
 

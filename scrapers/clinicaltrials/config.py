@@ -24,6 +24,7 @@ class ScraperSettings:
     resume_run_id: Optional[str] = None
     since: Optional[str] = None
     max_chunks: Optional[int] = None
+    resume_latest: bool = False
 
     @classmethod
     def load(cls, env_path: Optional[str] = None) -> "ScraperSettings":
@@ -35,6 +36,9 @@ class ScraperSettings:
                 load_dotenv(default_env, override=False)
 
         postgres_dsn = _must_get("POSTGRES_DSN")
+        resume_latest_raw = _get("RESUME_LATEST")
+        resume_latest = _to_bool(resume_latest_raw) if resume_latest_raw is not None else False
+
         return cls(
             ctgov_base_url=_get("CTGOV_BASE_URL", "https://clinicaltrials.gov/api/v2/studies"),
             query_expression=_get("CTGOV_QUERY_EXPRESSION", ""),
@@ -48,6 +52,7 @@ class ScraperSettings:
             resume_run_id=_get("RESUME_RUN_ID"),
             since=_get("SINCE"),
             max_chunks=_optional_int(_get("MAX_CHUNKS")),
+            resume_latest=resume_latest,
         )
 
     def copy_with(self, **overrides: object) -> "ScraperSettings":
@@ -75,3 +80,7 @@ def _optional_int(value: Optional[str]) -> Optional[int]:
     if value is None:
         return None
     return int(value)
+
+
+def _to_bool(value: str) -> bool:
+    return value.strip().lower() in {"1", "true", "yes", "on"}
