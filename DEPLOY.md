@@ -27,8 +27,7 @@ The app droplet connects to Postgres via the VPC private address; the local Post
 |---------------------|---------------------------------------------------------------------------------------|
 | `APP_HOST`          | Public IP or hostname of the app droplet (`104.236.126.216`).                          |
 | `APP_USER`          | SSH username (typically `root`).                                                      |
-| `APP_SSH_KEY`       | Private key (OpenSSH/PEM) with access to the droplet.                                 |
-| `APP_SSH_KEY_B64`   | _(Optional)_ Base64-encoded private key if storing the raw PEM is inconvenient.       |
+| `APP_SSH_KEY`       | Private key (OpenSSH/PEM) with access to the droplet. Include the BEGIN/END headers.  |
 | `DEPLOY_GHCR_PAT`   | PAT with `read:packages` scope so the droplet can `docker login` to GHCR.             |
 | `DEPLOY_PG_CONN`    | Value for `ConnectionStrings__Postgres` (used by ASP.NET).                            |
 | `DEPLOY_PG_DSN`     | Value for `POSTGRES_CONNECTION_STRING` (used by Python scrapers/CLIs).                |
@@ -43,7 +42,17 @@ The app droplet connects to Postgres via the VPC private address; the local Post
 
 1. Generate a new keypair: `ssh-keygen -t ed25519 -f ~/.ssh/bestpi_app -C "ci-deploy"` (no passphrase).
 2. Append the public key to `/root/.ssh/authorized_keys` on `bestpi-mvp`.
-3. Store the private key contents in the `APP_SSH_KEY` secret (or base64-encode it and store it in `APP_SSH_KEY_B64`).
+3. Store the private key contents in the `APP_SSH_KEY` secret. Keep the standard `-----BEGIN/END OPENSSH PRIVATE KEY-----` markers; comments are optional.
+
+### Smoke-testing the deploy pipeline
+
+To verify credentials without redeploying production, trigger the workflow manually:
+
+1. Navigate to **Actions → Deploy → Run workflow**.
+2. Choose `deploy_target = smoke`.
+3. The workflow will run the full build and attempt an SSH connection, reporting success without touching Docker Compose.
+
+Use `deploy_target = production` (or push to `main`) for the real rollout.
 
 ## Manual deploys
 
