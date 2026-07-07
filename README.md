@@ -61,6 +61,11 @@ POSTGRES_CONNECTION_STRING="Host=host.docker.internal;Port=5432;Database=clinica
 
 The compose file maps container port 8080 to host port 80 so you can load `http://localhost/` and hit `http://localhost/api/db-size` without extra tooling.
 
+Exposed operational endpoints (also visualized via `/db-health` and `/scraper-status` pages):
+
+- `GET /api/db-health` – returns database status, uptime, connection utilization, and size.
+- `GET /api/scraper-status?limit=20` – returns the latest ingest run plus a recent history table driven by `ingest_runs`.
+
 ### Resuming & Monitoring
 
 - View recent ingest runs (status, processed count, notes):

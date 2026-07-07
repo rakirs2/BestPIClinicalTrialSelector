@@ -1,0 +1,117 @@
+.scraper-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+.scraper-page header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.refresh {
+    border: none;
+    border-radius: 999px;
+    padding: 0.65rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(120deg, #60a5fa, #c084fc);
+    color: #030712;
+}
+
+.latest-card {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 20px 60px rgba(2, 6, 23, 0.55);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.latest-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.status-pill {
+    padding: 0.2rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-pill.healthy {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+.status-pill.warning {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.status-pill.critical {
+    background: rgba(248, 113, 113, 0.2);
+    color: #f87171;
+}
+
+.notes {
+    color: #cbd5f5;
+}
+
+.error-text {
+    color: #f87171;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: rgba(15, 23, 42, 0.9);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+}
+
+th,
+td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    white-space: nowrap;
+}
+
+tbody tr:hover {
+    background: rgba(148, 163, 184, 0.08);
+}
+
+@media (max-width: 768px) {
+    .scraper-page header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .refresh {
+        width: 100%;
+    }
+}
