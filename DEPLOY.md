@@ -18,6 +18,9 @@ The repo’s `.env` is for local development. The app droplet keeps deployment s
 ```
 POSTGRES_CONNECTION_STRING=Host=10.108.0.3;Port=5432;Database=clinicaltrials;Username=bestpi;Password=<password>;IncludeErrorDetail=true
 FRONTEND_IMAGE=ghcr.io/rakirs2/bestpi-frontend:latest
+
+# ASP.NET reads `ConnectionStrings:Postgres` directly, so include:
+ConnectionStrings__Postgres=Host=10.108.0.3;Port=5432;Database=clinicaltrials;Username=bestpi;Password=<password>;IncludeErrorDetail=true
 ```
 
 Update `/opt/bestpi/.env` for Python tooling:
