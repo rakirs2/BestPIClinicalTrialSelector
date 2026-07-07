@@ -4,6 +4,16 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: "Where to deploy"
+        required: true
+        default: production
+        type: choice
+        options:
+          - production
+          - smoke
 
 jobs:
   test:
@@ -75,35 +85,14 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
-    if: github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.deploy_target == 'production')
     steps:
-      - name: Prepare SSH key
-        id: prepare-key
-        shell: bash
-        env:
-          APP_SSH_KEY: ${{ secrets.APP_SSH_KEY }}
-          APP_SSH_KEY_B64: ${{ secrets.APP_SSH_KEY_B64 }}
-        run: |
-          set -euo pipefail
-          if [[ -n "${APP_SSH_KEY}" ]]; then
-            KEY_CONTENT="${APP_SSH_KEY}"
-          elif [[ -n "${APP_SSH_KEY_B64}" ]]; then
-            KEY_CONTENT="$(echo "${APP_SSH_KEY_B64}" | base64 --decode)"
-          else
-            echo "APP_SSH_KEY or APP_SSH_KEY_B64 secret is required for deploy" >&2
-            exit 1
-          fi
-          echo "::add-mask::${KEY_CONTENT}"
-          {
-            echo "private_key<<'EOF'"
-            echo "${KEY_CONTENT}"
-            echo "EOF"
-          } >>"$GITHUB_OUTPUT"
-
       - name: Validate deploy secrets
         run: |
+          : "${APP_SSH_KEY:?APP_SSH_KEY secret is required for deploy}"
           : "${GHCR_TOKEN:?DEPLOY_GHCR_PAT secret is required for deploy}"
         env:
+          APP_SSH_KEY: ${{ secrets.APP_SSH_KEY }}
           GHCR_TOKEN: ${{ secrets.DEPLOY_GHCR_PAT }}
 
       - name: Deploy application
@@ -111,12 +100,36 @@ jobs:
         with:
           host: ${{ secrets.APP_HOST }}
           username: ${{ secrets.APP_USER }}
-          key: ${{ steps.prepare-key.outputs.private_key }}
+          key: ${{ secrets.APP_SSH_KEY }}
           script: |
             export GHCR_TOKEN="${{ secrets.DEPLOY_GHCR_PAT }}"
             export GHCR_USERNAME="${{ github.repository_owner }}"
             export REPO_DIR="/opt/bestpi"
             bash ${REPO_DIR}/scripts/deploy_app.sh main
+
+  deploy-smoke:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy_target == 'smoke'
+    steps:
+      - name: Validate smoke secrets
+        run: |
+          : "${APP_SSH_KEY:?APP_SSH_KEY secret is required for smoke deploy}"
+          : "${GHCR_TOKEN:?DEPLOY_GHCR_PAT secret is required for smoke deploy}"
+        env:
+          APP_SSH_KEY: ${{ secrets.APP_SSH_KEY }}
+          GHCR_TOKEN: ${{ secrets.DEPLOY_GHCR_PAT }}
+
+      - name: Verify SSH connectivity
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.APP_HOST }}
+          username: ${{ secrets.APP_USER }}
+          key: ${{ secrets.APP_SSH_KEY }}
+          script: |
+            echo "Smoke deploy connection successful on $(hostname)"
+            docker info >/dev/null 2>&1 && echo "Docker is reachable"
 
   deploy-db:
     runs-on: ubuntu-latest
