@@ -1,0 +1,41 @@
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 0.15rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.theme-toggle label {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.theme-select {
+    border: none;
+    background: transparent;
+    color: var(--color-text);
+    font-weight: 600;
+    outline: none;
+    font-size: 0.85rem;
+}
+
+.theme-select option {
+    color: #0f172a;
+}
+
+[data-theme="dark"] .theme-select option,
+:root[data-theme="dark"] .theme-select option {
+    color: #e2e8f0;
+}
+
+@media (max-width: 640.98px) {
+    .theme-toggle {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
