@@ -25,6 +25,7 @@ class ScraperSettings:
     since: Optional[str] = None
     max_chunks: Optional[int] = None
     resume_latest: bool = False
+    environment: str = "production"
 
     @classmethod
     def load(cls, env_path: Optional[str] = None) -> "ScraperSettings":
@@ -39,6 +40,18 @@ class ScraperSettings:
         resume_latest_raw = _get("RESUME_LATEST")
         resume_latest = _to_bool(resume_latest_raw) if resume_latest_raw is not None else False
 
+        environment = _detect_environment()
+        default_max_chunks = None
+        if environment in _LIMITED_ENVIRONMENTS:
+            default_max_chunks = 5
+
+        configured_default = _optional_int(_get("MAX_CHUNKS_DEFAULT"))
+        if configured_default is not None:
+            default_max_chunks = configured_default
+
+        env_max_chunks = _optional_int(_get("MAX_CHUNKS"))
+        resolved_max_chunks = env_max_chunks if env_max_chunks is not None else default_max_chunks
+
         return cls(
             ctgov_base_url=_get("CTGOV_BASE_URL", "https://clinicaltrials.gov/api/v2/studies"),
             query_expression=_get("CTGOV_QUERY_EXPRESSION", ""),
@@ -51,8 +64,9 @@ class ScraperSettings:
             log_level=_get("LOG_LEVEL", "INFO"),
             resume_run_id=_get("RESUME_RUN_ID"),
             since=_get("SINCE"),
-            max_chunks=_optional_int(_get("MAX_CHUNKS")),
+            max_chunks=resolved_max_chunks,
             resume_latest=resume_latest,
+            environment=environment,
         )
 
     def copy_with(self, **overrides: object) -> "ScraperSettings":
@@ -82,5 +96,34 @@ def _optional_int(value: Optional[str]) -> Optional[int]:
     return int(value)
 
 
+def _detect_environment() -> str:
+    candidate_keys = ("SCRAPER_ENV", "APP_ENV", "ENVIRONMENT", "ASPNETCORE_ENVIRONMENT")
+    for key in candidate_keys:
+        value = _get(key)
+        if value:
+            return value.strip().lower()
+
+    ci_flags = ("CI", "GITHUB_ACTIONS")
+    for key in ci_flags:
+        value = _get(key)
+        if value and _to_bool(value):
+            return "ci"
+
+    return "production"
+
+
 def _to_bool(value: str) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+_LIMITED_ENVIRONMENTS = {
+    "development",
+    "dev",
+    "staging",
+    "stage",
+    "test",
+    "testing",
+    "qa",
+    "preview",
+    "ci",
+}

@@ -23,6 +23,7 @@ This repository is at the bootstrap stage. The current milestone focuses on a **
    - Local PostgreSQL instance (Docker or native). Create an empty database, e.g. `clinicaltrials`.
 3. **Configure environment**
    - Copy `.env.example` to `.env` and update `POSTGRES_DSN` plus optional tuning values.
+   - Non-production runs (`SCRAPER_ENV` set to `development`, `staging`, `test`, `ci`, etc.) automatically stop after five API chunks. Leave `SCRAPER_ENV=production` (or override with `MAX_CHUNKS`/`--max-chunks`) for uncapped production syncs.
    - Set `RESUME_LATEST=true` if you’d like the scraper to automatically pick up the most recent unfinished run.
    - Create a virtual environment and install dependencies:
      ```bash
@@ -33,12 +34,13 @@ This repository is at the bootstrap stage. The current milestone focuses on a **
    ```bash
    python -m scrapers.clinicaltrials.runner --env-file .env full-sync
    ```
-   The command streams every study through the v2 ClinicalTrials.gov API, stores the raw JSON payload plus tabularized data, and halts automatically if the database exceeds the configured size limit (default 10 GB). Progress is tracked in the `ingest_runs` table.
+   The command streams every study through the v2 ClinicalTrials.gov API, stores the raw JSON payload plus tabularized data, and halts automatically if the database exceeds the configured size limit (default 10 GB). Progress is tracked in the `ingest_runs` table and non-production runs stop after the 5th chunk unless you override the cap.
 5. **Run tests**
    ```bash
    .venv/bin/pytest
+   dotnet test frontend/BestPI.Frontend.Tests/BestPI.Frontend.Tests.csproj
    ```
-   Tests currently cover the normalization pipeline; expand coverage as parsers evolve.
+   Tests currently cover the normalization pipeline plus frontend services; expand coverage as parsers and UI evolve.
 
 ## Frontend Preview (Blazor Server MVP)
 
@@ -64,7 +66,7 @@ The compose file maps container port 8080 to host port 80 so you can load `http:
 Exposed operational endpoints (also visualized via `/db-health` and `/scraper-status` pages):
 
 - `GET /api/db-health` – returns database status, uptime, connection utilization, and size.
-- `GET /api/scraper-status?limit=20` – returns the latest ingest run plus a recent history table driven by `ingest_runs`.
+- `GET /api/scraper-status?limit=20` – returns the latest ingest run, a recent history table driven by `ingest_runs`, and the 50 most recent log entries captured in `scraper_run_logs` so the UI can stream live telemetry.
 
 ## Deployment
 

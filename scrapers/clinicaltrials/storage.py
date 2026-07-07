@@ -186,6 +186,18 @@ SCHEMA_STATEMENTS: list[str] = [
     """
     CREATE INDEX IF NOT EXISTS idx_locations_country ON locations(country)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS scraper_run_logs (
+        id BIGSERIAL PRIMARY KEY,
+        run_id UUID NOT NULL REFERENCES ingest_runs(id) ON DELETE CASCADE,
+        logged_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        level TEXT NOT NULL,
+        message TEXT NOT NULL
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS idx_scraper_run_logs_run_time ON scraper_run_logs(run_id, logged_at DESC)
+    """,
 ]
 
 
@@ -208,6 +220,40 @@ class PostgresStorage:
             )
             cur.execute("ALTER TABLE ingest_runs ADD COLUMN IF NOT EXISTS last_error TEXT")
         self._conn.commit()
+
+    def log_run_event(self, run_id: uuid.UUID, level: str, message: str) -> None:
+        truncated = message[:2000]
+        with self._conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO scraper_run_logs (run_id, level, message)
+                VALUES (%s, %s, %s)
+                """,
+                (run_id, level.upper(), truncated),
+            )
+        self._conn.commit()
+
+    def fetch_run_logs(self, run_id: uuid.UUID, limit: int = 50) -> List[dict]:
+        with self._conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT logged_at, level, message
+                FROM scraper_run_logs
+                WHERE run_id = %s
+                ORDER BY logged_at DESC
+                LIMIT %s
+                """,
+                (run_id, limit),
+            )
+            rows = cur.fetchall()
+        return [
+            {
+                "logged_at": row[0],
+                "level": row[1],
+                "message": row[2],
+            }
+            for row in rows
+        ]
 
     def start_run(self, total_expected: int | None) -> uuid.UUID:
         run_id = uuid.uuid4()

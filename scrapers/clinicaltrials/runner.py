@@ -17,6 +17,13 @@ from .storage import PostgresStorage
 from .transform import normalize_full_study
 
 
+def _persist_run_log(storage: PostgresStorage, run_id: uuid.UUID, level: str, message: str) -> None:
+    try:
+        storage.log_run_event(run_id, level, message)
+    except Exception:  # pragma: no cover - logging failures shouldn’t crash the run
+        logging.debug("Failed to persist run log", exc_info=True)
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ClinicalTrials.gov ingestion toolkit")
     parser.add_argument("--env-file", dest="env_file", help="Optional path to .env file")
@@ -107,9 +114,11 @@ async def full_sync(settings: ScraperSettings) -> None:
         logging.info(
             "Resuming run %s from processed=%s chunk=%s", run_id, processed, chunk_index
         )
+        _persist_run_log(storage, run_id, "INFO", f"Resuming run at chunk {chunk_index}")
     else:
         run_id = storage.start_run(total_expected=None)
         logging.info("Created new run %s", run_id)
+        _persist_run_log(storage, run_id, "INFO", "Run started")
 
     stop_event = asyncio.Event()
     _install_signal_handlers(stop_event)
@@ -119,6 +128,7 @@ async def full_sync(settings: ScraperSettings) -> None:
     except Exception as exc:  # noqa: BLE001
         logging.exception("Ingest failed: %s", exc)
         storage.record_failure(run_id, processed, str(exc))
+        _persist_run_log(storage, run_id, "ERROR", f"run failed after {processed} studies: {exc}")
         raise
     finally:
         await client.close()
@@ -142,6 +152,7 @@ async def _ingest_loop(
     if processed > 0 and not next_token:
         storage.finish_run(run_id, "completed", processed, "No next page token; assuming complete")
         logging.info("Run %s already ingested %s studies", run_id, processed)
+        _persist_run_log(storage, run_id, "INFO", "No next page token; nothing to resume")
         return
 
     # Fetch initial page
@@ -149,6 +160,7 @@ async def _ingest_loop(
     if not page.studies:
         storage.finish_run(run_id, "completed", processed, "No studies returned")
         logging.info("No studies to ingest")
+        _persist_run_log(storage, run_id, "INFO", "API returned no studies; run completed")
         return
 
     while True:
@@ -156,9 +168,16 @@ async def _ingest_loop(
             note = "Stopped via signal"
             storage.finish_run(run_id, "stopped_manual", processed, note)
             logging.warning(note)
+            _persist_run_log(storage, run_id, "WARNING", note)
             return
 
         chunk_index += 1
+        _persist_run_log(
+            storage,
+            run_id,
+            "INFO",
+            f"Processing chunk {chunk_index}",
+        )
         fetched_at = datetime.now(timezone.utc)
         normalized = []
         for study in page.studies:
@@ -170,11 +189,13 @@ async def _ingest_loop(
         processed += len(normalized)
         storage.update_run_progress(run_id, processed, page.next_page_token, chunk_index)
         logging.info("Processed %s studies (chunk %s)", processed, chunk_index)
+        _persist_run_log(storage, run_id, "INFO", f"Chunk {chunk_index} persisted {len(normalized)} studies")
 
         if stop_event.is_set():
             note = "Stopped via signal"
             storage.finish_run(run_id, "stopped_manual", processed, note)
             logging.warning(note)
+            _persist_run_log(storage, run_id, "WARNING", note)
             return
 
         db_size = storage.current_db_size_gb()
@@ -182,16 +203,19 @@ async def _ingest_loop(
             note = f"DB size {db_size:.2f} GB exceeded limit {settings.db_size_limit_gb} GB"
             storage.finish_run(run_id, "stopped_threshold", processed, note)
             logging.warning(note)
+            _persist_run_log(storage, run_id, "WARNING", note)
             return
 
         if settings.max_chunks and chunk_index >= settings.max_chunks:
             storage.finish_run(run_id, "stopped_manual", processed, "Max chunk limit reached")
             logging.warning("Stopped after reaching max_chunks=%s", settings.max_chunks)
+            _persist_run_log(storage, run_id, "INFO", "Max chunk limit reached; stopping")
             return
 
         if not page.next_page_token:
             storage.finish_run(run_id, "completed", processed, None)
             logging.info("Ingest complete: %s studies", processed)
+            _persist_run_log(storage, run_id, "INFO", f"Run completed after processing {processed} studies")
             return
 
         page = await client.fetch_page(page.next_page_token, since=settings.since)

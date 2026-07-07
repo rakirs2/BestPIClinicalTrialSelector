@@ -16,6 +16,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 }
 builder.Services.AddNpgsqlDataSource(connectionString);
 builder.Services.AddScoped<DbMetricsService>();
+builder.Services.AddScoped<IScraperStatusStore, PostgresScraperStatusStore>();
 builder.Services.AddScoped<ScraperStatusService>();
 
 var app = builder.Build();

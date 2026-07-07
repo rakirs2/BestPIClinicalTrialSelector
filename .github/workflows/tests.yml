@@ -26,3 +26,21 @@ jobs:
 
       - name: Run tests
         run: pytest
+
+  dotnet-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore frontend/BestPI.Frontend.Tests/BestPI.Frontend.Tests.csproj
+
+      - name: Run frontend tests
+        run: dotnet test frontend/BestPI.Frontend.Tests/BestPI.Frontend.Tests.csproj --no-restore --nologo
