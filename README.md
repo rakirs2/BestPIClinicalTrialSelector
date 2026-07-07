@@ -40,6 +40,32 @@ This repository is at the bootstrap stage. The current milestone focuses on a **
    ```
    Tests currently cover the normalization pipeline; expand coverage as parsers evolve.
 
+## Frontend Preview (Blazor Server MVP)
+
+The `frontend/BestPI.Frontend` project is a Blazor Server shell modeled after CSRankings. It shows the sticky filter bar, ranking table scaffold, and surfaces live PostgreSQL metadata through a `/api/db-size` endpoint that reads directly from the database.
+
+Local development:
+
+```bash
+dotnet watch run --project frontend/BestPI.Frontend/BestPI.Frontend.csproj
+```
+
+Set a connection string via `ConnectionStrings__Postgres` in `appsettings.Development.json` or an environment variable (`ConnectionStrings__Postgres="Host=localhost;Port=5432;Database=clinicaltrials;Username=postgres;Password=postgres"`).
+
+To preview the same artifact we deploy to DigitalOcean:
+
+```bash
+POSTGRES_CONNECTION_STRING="Host=host.docker.internal;Port=5432;Database=clinicaltrials;Username=postgres;Password=postgres" \
+  docker-compose up --build frontend
+```
+
+The compose file maps container port 8080 to host port 80 so you can load `http://localhost/` and hit `http://localhost/api/db-size` without extra tooling.
+
+Exposed operational endpoints (also visualized via `/db-health` and `/scraper-status` pages):
+
+- `GET /api/db-health` – returns database status, uptime, connection utilization, and size.
+- `GET /api/scraper-status?limit=20` – returns the latest ingest run plus a recent history table driven by `ingest_runs`.
+
 ### Resuming & Monitoring
 
 - View recent ingest runs (status, processed count, notes):

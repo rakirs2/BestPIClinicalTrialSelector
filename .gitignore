@@ -4,3 +4,10 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 *.pyc
+bin/
+obj/
+**/bin/
+**/obj/
+*.user
+*.suo
+**/wwwroot/lib/

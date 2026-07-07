@@ -1,0 +1,96 @@
+.health-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+.health-page header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.refresh {
+    border: none;
+    border-radius: 999px;
+    padding: 0.65rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(120deg, #34d399, #10b981);
+    color: #041014;
+}
+
+.error-banner {
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    background: rgba(248, 113, 113, 0.15);
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.metric-card {
+    padding: 1.25rem;
+    border-radius: 1rem;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 10px 40px rgba(2, 6, 23, 0.5);
+}
+
+.metric-card header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+}
+
+.metric-card .value {
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+.status-pill {
+    padding: 0.2rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-pill.healthy {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+.status-pill.warning {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.status-pill.critical {
+    background: rgba(248, 113, 113, 0.2);
+    color: #f87171;
+}
+
+@media (max-width: 768px) {
+    .health-page header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .refresh {
+        width: 100%;
+    }
+}
