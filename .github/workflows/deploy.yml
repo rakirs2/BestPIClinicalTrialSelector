@@ -87,28 +87,12 @@ jobs:
       - build
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.deploy_target == 'production')
     steps:
-      - name: Prepare SSH key
-        id: prepare-key
-        shell: bash
-        env:
-          APP_SSH_KEY: ${{ secrets.APP_SSH_KEY }}
-        run: |
-          set -euo pipefail
-          if [[ -z "${APP_SSH_KEY}" ]]; then
-            echo "APP_SSH_KEY secret is required for deploy" >&2
-            exit 1
-          fi
-          echo "::add-mask::${APP_SSH_KEY}"
-          KEY_PATH="$(mktemp)"
-          printf '%s' "${APP_SSH_KEY}" > "${KEY_PATH}"
-          printf '\n' >> "${KEY_PATH}"
-          chmod 600 "${KEY_PATH}"
-          echo "key_path=${KEY_PATH}" >>"$GITHUB_OUTPUT"
-
       - name: Validate deploy secrets
         run: |
+          : "${APP_SSH_KEY:?APP_SSH_KEY secret is required for deploy}"
           : "${GHCR_TOKEN:?DEPLOY_GHCR_PAT secret is required for deploy}"
         env:
+          APP_SSH_KEY: ${{ secrets.APP_SSH_KEY }}
           GHCR_TOKEN: ${{ secrets.DEPLOY_GHCR_PAT }}
 
       - name: Deploy application
@@ -116,7 +100,7 @@ jobs:
         with:
           host: ${{ secrets.APP_HOST }}
           username: ${{ secrets.APP_USER }}
-          key_path: ${{ steps.prepare-key.outputs.key_path }}
+          key: ${{ secrets.APP_SSH_KEY }}
           script: |
             export GHCR_TOKEN="${{ secrets.DEPLOY_GHCR_PAT }}"
             export GHCR_USERNAME="${{ github.repository_owner }}"
@@ -129,28 +113,12 @@ jobs:
       - build
     if: github.event_name == 'workflow_dispatch' && inputs.deploy_target == 'smoke'
     steps:
-      - name: Prepare SSH key
-        id: prepare-key
-        shell: bash
+      - name: Validate smoke secrets
+        run: |
+          : "${APP_SSH_KEY:?APP_SSH_KEY secret is required for smoke deploy}"
+          : "${GHCR_TOKEN:?DEPLOY_GHCR_PAT secret is required for smoke deploy}"
         env:
           APP_SSH_KEY: ${{ secrets.APP_SSH_KEY }}
-        run: |
-          set -euo pipefail
-          if [[ -z "${APP_SSH_KEY}" ]]; then
-            echo "APP_SSH_KEY secret is required for deploy" >&2
-            exit 1
-          fi
-          echo "::add-mask::${APP_SSH_KEY}"
-          KEY_PATH="$(mktemp)"
-          printf '%s' "${APP_SSH_KEY}" > "${KEY_PATH}"
-          printf '\n' >> "${KEY_PATH}"
-          chmod 600 "${KEY_PATH}"
-          echo "key_path=${KEY_PATH}" >>"$GITHUB_OUTPUT"
-
-      - name: Validate PAT
-        run: |
-          : "${GHCR_TOKEN:?DEPLOY_GHCR_PAT secret is required for deploy}"
-        env:
           GHCR_TOKEN: ${{ secrets.DEPLOY_GHCR_PAT }}
 
       - name: Verify SSH connectivity
@@ -158,7 +126,7 @@ jobs:
         with:
           host: ${{ secrets.APP_HOST }}
           username: ${{ secrets.APP_USER }}
-          key_path: ${{ steps.prepare-key.outputs.key_path }}
+          key: ${{ secrets.APP_SSH_KEY }}
           script: |
             echo "Smoke deploy connection successful on $(hostname)"
             docker info >/dev/null 2>&1 && echo "Docker is reachable"
