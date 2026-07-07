@@ -69,6 +69,7 @@ Use the aggregation job to summarize condition/intervention experience per inves
 python -m aggregations.investigator_topics --env-file .env aggregate          # all investigators
 python -m aggregations.investigator_topics --env-file .env aggregate --limit 10  # pilot subset
 python -m aggregations.investigator_topics --env-file .env count               # summary stats
+python -m aggregations.investigator_topics --env-file .env recommend condition "Heart Failure" --limit 5
 ```
 
 JSON layout example for a single investigator:
@@ -90,7 +91,7 @@ JSON layout example for a single investigator:
 }
 ```
 
-A 10-investigator pilot completed in ~0.01 s on a dev laptop, implying a full refresh for ~75k investigators should finish in roughly 1–2 minutes.
+A 10-investigator pilot completed in ~0.01 s on a dev laptop, implying a full refresh for ~75k investigators should finish in roughly 1–2 minutes. Use the `recommend` command to score PIs for any condition/intervention using phase- and recency-weighted heuristics (exponential decay toward the current date).
 
 ## Proposed Architecture
 

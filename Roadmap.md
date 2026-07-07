@@ -511,3 +511,27 @@ The user should be able to filter and sort by:
 •	Sponsor relationship history
 •	Co-enrollment opportunities
 •	Competing trial burden
+
+10. PI/Site Selection UI Implementation Plan
+The front end should adopt the overall interaction model of CSRankings.com—dense filters, collapsible taxonomy sidebar, and sortable ranking tables—but render clinical trial, site, and investigator data.
+
+10.1 Technology & Constraints
+•	Blazor Server only (no WebAssembly for MVP) so the UI and data services live inside one ASP.NET Core host.
+•	Native HTML/Blazor controls everywhere (select, checkbox, range inputs, `<details>/<summary>` accordions) to avoid third-party JavaScript packages; any advanced behavior (sliders, overlays) should be implemented with built-in Blazor plus minimal CSS.
+•	All data requests must hit PostgreSQL directly through EF Core or Dapper queries; no caching, denormalized API snapshots, or offline files for now so every view reflects the current ingestion state.
+
+10.2 Layout & UX Requirements
+•	Sticky filter bar modeled after CSRankings with geography selector, timeline slider, disease/intervention toggles, and sponsor-focused quick actions (tour/export buttons).
+•	Taxonomy sidebar that mirrors CSRankings area lists but uses therapeutic area groupings, intervention/drug types, and operational priorities; collapsible sections keep the footprint small on desktop and allow mobile reflow underneath the table.
+•	Ranking table with virtualization, sortable headers, inline bar indicators for score components, and badges for interventions/geographies.
+•	Detail drawer/modal that surfaces raw ClinicalTrials.gov excerpts, investigator history, locations, and aggregated stats without leaving the page.
+•	Guided walkthrough overlay implemented natively (conditional Blazor components) to introduce controls, similar in spirit to CSRankings’ tour feature.
+
+10.3 Execution Stages
+1.	Scaffold Blazor Server host, global layout, theming, data access layer, and configuration for PostgreSQL.
+2.	Implement filter panel + taxonomy sidebar with live bindings to an application-wide filter state service; wire controls to update query parameters.
+3.	Build ranking table backed by server-side queries that fetch fresh scoring data on every change; include loading states and cancellation to handle rapid filter updates.
+4.	Add investigator/site detail drawer plus evidence panels (publications, trials, demographics) loaded on demand, still querying the database directly.
+5.	Layer in walkthrough overlay, sponsor/export CTAs, and documentation so teams can iterate on scoring logic and data sources without changing the UI contract.
+
+Future enhancements (offline exports, auth, caching, UI polish) can layer on after the five stages above deliver a functioning, data-backed Blazor Server experience inspired by CSRankings.
