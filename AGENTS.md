@@ -6,3 +6,9 @@
 | 2026-07-06 | OpenCode (gpt-5.1-codex) | Implemented Python ClinicalTrials.gov scraper + Postgres schema | `scrapers/clinicaltrials/*`, `requirements.txt`, `.env.example`, `.gitignore`, `tests/`, `README.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, `WORKLOG.md`, `SYSTEM.md` | Added async client, normalization, storage, docs, and tests with DB size guard. |
 | 2026-07-06 | OpenCode (gpt-5.1-codex) | Added governance docs (system, contributing, worklog, etc.) | `CONTRIBUTING.md`, `SYSTEM.md`, `WORKLOG.md`, `CHANGELOG.md`, `ARCHITECTURE.md`       | Established baseline artifacts for agent collaboration. |
 | 2026-07-06 | OpenCode (gpt-5.1-codex) | Authored initial README with objectives and roadmap        | `README.md`                                                                           | Pending tech stack selection before expanding setup instructions. |
+
+## Branching Expectations
+
+- Always start work on a new feature branch (e.g., `feature/<topic>` or `infra/<topic>`). Never commit directly to `main`.
+- Enable GitHub’s “Automatically delete head branches” setting or delete branches manually after merging (`git push origin --delete <branch>`).
+- Reference the branch name in PR titles/descriptions so the automation pipeline can associate deployments with a specific commit.

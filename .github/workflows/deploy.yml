@@ -1,0 +1,100 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -r requirements.txt
+
+      - name: Run pytest
+        run: .venv/bin/pytest
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build Blazor frontend
+        run: dotnet build frontend/BestPI.Frontend/BestPI.Frontend.csproj
+
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      db: ${{ steps.filter.outputs.db }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            db:
+              - 'scrapers/clinicaltrials/storage.py'
+              - 'migrations/**'
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push frontend image
+        env:
+          IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/bestpi-frontend
+        run: |
+          docker build -f frontend/BestPI.Frontend/Dockerfile -t ${IMAGE_NAME}:${GITHUB_SHA} -t ${IMAGE_NAME}:latest .
+          docker push ${IMAGE_NAME}:${GITHUB_SHA}
+          docker push ${IMAGE_NAME}:latest
+
+  deploy-app:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.APP_HOST }}
+          username: ${{ secrets.APP_USER }}
+          key: ${{ secrets.APP_SSH_KEY }}
+          script: |
+            export GHCR_TOKEN="${{ secrets.GHCR_PAT }}"
+            export GHCR_USERNAME="${{ github.repository_owner }}"
+            export REPO_DIR="/opt/bestpi"
+            bash ${REPO_DIR}/scripts/deploy_app.sh main
+
+  deploy-db:
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+    if: needs.changes.outputs.db == 'true'
+    steps:
+      - name: Notify schema change
+        run: |
+          echo "Database schema changes detected. Please run scripts/run_db_migrations.sh manually on the DB host."

@@ -66,6 +66,14 @@ Exposed operational endpoints (also visualized via `/db-health` and `/scraper-st
 - `GET /api/db-health` – returns database status, uptime, connection utilization, and size.
 - `GET /api/scraper-status?limit=20` – returns the latest ingest run plus a recent history table driven by `ingest_runs`.
 
+## Deployment
+
+- Production uses two DigitalOcean droplets (`bestpi-mvp` for the app, `bestpi-db` for PostgreSQL) connected via a private VPC link.
+- Secrets for Docker Compose live in `/opt/bestpi/.env.deploy` so rsync and GitHub Actions do not overwrite them.
+- GitHub Actions (`.github/workflows/deploy.yml`) builds/pushes the frontend image to GHCR and redeploys the app droplet after every push to `main`. Schema-aware DB deploys are gated separately.
+
+See `DEPLOY.md` for the full runbook, required secrets, and manual fallback commands.
+
 ### Resuming & Monitoring
 
 - View recent ingest runs (status, processed count, notes):
@@ -140,6 +148,7 @@ See `ARCHITECTURE.md` for the detailed ingestion pipeline and future .NET servic
 - Complete the ClinicalTrials.gov ingestion pipeline (✅ done via Python scraper).
 - Ship an MVP scoring heuristic with basic UI output.
 - Add automated tests and deployment pipeline.
+- Add blue/green (or rolling) deployment strategy for the Blazor frontend to avoid downtime.
 
 ## License
 

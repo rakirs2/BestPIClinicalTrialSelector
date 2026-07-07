@@ -1,8 +1,11 @@
 services:
   frontend:
+    image: ${FRONTEND_IMAGE:-bestpi-frontend:dev}
     build:
       context: .
       dockerfile: frontend/BestPI.Frontend/Dockerfile
+    env_file:
+      - .env.deploy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__Postgres: ${POSTGRES_CONNECTION_STRING}
