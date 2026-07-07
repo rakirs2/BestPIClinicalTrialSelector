@@ -18,6 +18,8 @@ builder.Services.AddNpgsqlDataSource(connectionString);
 builder.Services.AddScoped<DbMetricsService>();
 builder.Services.AddScoped<IScraperStatusStore, PostgresScraperStatusStore>();
 builder.Services.AddScoped<ScraperStatusService>();
+builder.Services.AddScoped<IThemeClient, BrowserThemeClient>();
+builder.Services.AddScoped<ThemeService>();
 
 var app = builder.Build();
 

@@ -1,0 +1,43 @@
+@using BestPI.Frontend.Services
+@inject ThemeService ThemeService
+
+<div class="theme-toggle">
+    <label for="theme-select">Appearance</label>
+    <select id="theme-select" class="theme-select" @onchange="OnThemeChanged" value="@_currentValue">
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+    </select>
+</div>
+
+@code {
+    private string _currentValue = ThemePreference.System.ToString().ToLowerInvariant();
+    private bool _initialized;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ThemeService.InitializeAsync();
+        _currentValue = ThemeService.Current.ToString().ToLowerInvariant();
+        _initialized = true;
+    }
+
+    private async Task OnThemeChanged(ChangeEventArgs args)
+    {
+        if (args.Value is not string raw)
+        {
+            return;
+        }
+
+        if (!Enum.TryParse<ThemePreference>(raw, true, out var preference))
+        {
+            return;
+        }
+
+        _currentValue = raw.ToLowerInvariant();
+
+        if (_initialized)
+        {
+            await ThemeService.SetThemeAsync(preference);
+        }
+    }
+}

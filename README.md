@@ -46,6 +46,9 @@ This repository is at the bootstrap stage. The current milestone focuses on a **
 
 The `frontend/BestPI.Frontend` project is a Blazor Server shell modeled after CSRankings. It shows the sticky filter bar, ranking table scaffold, and surfaces live PostgreSQL metadata through a `/api/db-size` endpoint that reads directly from the database.
 
+- The layout ships with a system-aware light/dark theme and a manual toggle (System / Light / Dark) so operators can pick a comfortable palette.
+- Status dashboards (Scraper Status, DB Health) use a simplified, high-contrast color scheme for readability.
+
 Local development:
 
 ```bash
