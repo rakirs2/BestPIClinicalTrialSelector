@@ -77,6 +77,14 @@ jobs:
       - build
     if: github.ref == 'refs/heads/main'
     steps:
+      - name: Validate deploy secrets
+        run: |
+          : "${APP_SSH_KEY:?APP_SSH_KEY secret is required for deploy}"
+          : "${GHCR_TOKEN:?DEPLOY_GHCR_PAT secret is required for deploy}"
+        env:
+          APP_SSH_KEY: ${{ secrets.APP_SSH_KEY }}
+          GHCR_TOKEN: ${{ secrets.DEPLOY_GHCR_PAT }}
+
       - name: Deploy application
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -84,7 +92,7 @@ jobs:
           username: ${{ secrets.APP_USER }}
           key: ${{ secrets.APP_SSH_KEY }}
           script: |
-            export GHCR_TOKEN="${{ secrets.GHCR_PAT }}"
+            export GHCR_TOKEN="${{ secrets.DEPLOY_GHCR_PAT }}"
             export GHCR_USERNAME="${{ github.repository_owner }}"
             export REPO_DIR="/opt/bestpi"
             bash ${REPO_DIR}/scripts/deploy_app.sh main
