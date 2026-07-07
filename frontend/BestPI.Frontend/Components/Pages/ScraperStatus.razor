@@ -33,19 +33,41 @@
     }
     else
     {
-        <section class="latest-card">
-            <div>
-                <p class="eyebrow">Latest Run</p>
-                <h2>@(_status.LatestRun is null ? "No runs recorded" : _status.LatestRun.StartedAt.ToLocalTime().ToString("g"))</h2>
+        <section class="latest-card card-surface">
+            <div class="latest-header">
+                <div>
+                    <p class="eyebrow">Latest Run</p>
+                    <h2>@(_status.LatestRun is null ? "No runs recorded" : _status.LatestRun.StartedAt.ToLocalTime().ToString("g"))</h2>
+                </div>
+                <div class="pill-group">
+                    @if (_status.LatestRun is not null)
+                    {
+                        <span class="status-pill @GetStatusClass(_status.LatestRun.Status)">@FormatStatus(_status.LatestRun.Status)</span>
+                    }
+                </div>
             </div>
+
             @if (_status.LatestRun is not null)
             {
-                <div class="latest-meta">
-                    <span class="status-pill @GetStatusClass(_status.LatestRun.Status)">@_status.LatestRun.Status.ToUpperInvariant()</span>
-                    <span><strong>@_status.LatestRun.ProcessedCount</strong> studies processed</span>
-                    <span>Chunk @_status.LatestRun.CurrentChunk</span>
-                    <span>Finished: @(_status.LatestRun.FinishedAt?.ToLocalTime().ToString("g") ?? "in progress")</span>
-                </div>
+                <dl class="latest-grid">
+                    <div>
+                        <dt>Processed</dt>
+                        <dd>@_status.LatestRun.ProcessedCount</dd>
+                    </div>
+                    <div>
+                        <dt>Chunk</dt>
+                        <dd>@_status.LatestRun.CurrentChunk</dd>
+                    </div>
+                    <div>
+                        <dt>Last Token</dt>
+                        <dd>@(_status.LatestRun.LastPageToken ?? "-")</dd>
+                    </div>
+                    <div>
+                        <dt>Finish</dt>
+                        <dd>@(_status.LatestRun.FinishedAt?.ToLocalTime().ToString("g") ?? "In progress")</dd>
+                    </div>
+                </dl>
+
                 @if (!string.IsNullOrWhiteSpace(_status.LatestRun.Notes))
                 {
                     <p class="notes">Notes: @_status.LatestRun.Notes</p>
@@ -84,7 +106,7 @@
                         {
                             <tr>
                                 <td>@run.Id.ToString()[..8]</td>
-                                <td><span class="status-pill @GetStatusClass(run.Status)">@run.Status</span></td>
+                                <td><span class="status-pill @GetStatusClass(run.Status)">@FormatStatus(run.Status)</span></td>
                                 <td>@run.ProcessedCount</td>
                                 <td>@run.CurrentChunk</td>
                                 <td>@run.StartedAt.ToLocalTime().ToString("g")</td>
@@ -97,7 +119,7 @@
             </div>
         </section>
 
-        <section class="logs-card">
+        <section class="logs-card card-surface">
             <div class="table-header">
                 <h3>Live Logs</h3>
                 <small>@((_status.LatestRunLogs?.Count ?? 0) == 0 ? "No log entries yet" : "Most recent 50 entries")</small>
@@ -207,6 +229,8 @@
         "running" => "healthy",
         _ => "healthy"
     };
+
+    private static string FormatStatus(string status) => ScraperStatusFormatting.ToDisplayLabel(status);
 
     public async ValueTask DisposeAsync()
     {
