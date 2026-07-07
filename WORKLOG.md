@@ -11,6 +11,7 @@ Use this file to track medium-to-large tasks, their owners, and status. Update i
 | 2026-07-06 | OpenCode (gpt-5.1-codex)  | Wire up CI to run pytest on pushes/PRs                     | completed | Added `.github/workflows/tests.yml` and documented CI expectations. |
 | 2026-07-06 | OpenCode (gpt-5.1-codex)  | Make scraper checkpointable/resumable with CLI status      | completed | Added signal-aware shutdown, resume flags, status command, and documentation. |
 | 2026-07-06 | OpenCode (gpt-5.1-codex)  | Aggregate investigator condition/intervention metadata     | completed | Added `investigator_topic_counts` JSON table + CLI to compute counts per investigator and recommend top PIs by topic with phase/recency weighting. |
+| 2026-07-07 | OpenCode (gpt-5.1-codex)  | Surface scraper telemetry (chunk caps + DB logs + UI feed) | completed | Enforcing non-prod chunk cap, persisting run logs, and wiring `/scraper-status` live log stream. |
 | 2026-07-06 | Maintainer or delegate    | Define MVP PI scoring heuristic                | pending   | Capture scoring dimensions and weighting approach. |
 | 2026-07-06 | Maintainer or delegate    | Prototype feasibility review UI                | pending   | Outline wireframes and data surfacing requirements. |
 

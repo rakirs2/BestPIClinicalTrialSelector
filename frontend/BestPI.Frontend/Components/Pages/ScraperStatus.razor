@@ -96,6 +96,30 @@
                 </table>
             </div>
         </section>
+
+        <section class="logs-card">
+            <div class="table-header">
+                <h3>Live Logs</h3>
+                <small>@((_status.LatestRunLogs?.Count ?? 0) == 0 ? "No log entries yet" : "Most recent 50 entries")</small>
+            </div>
+            <div class="log-list">
+                @if (_status.LatestRunLogs is null || _status.LatestRunLogs.Count == 0)
+                {
+                    <p class="muted">Logs will appear here while the scraper is running.</p>
+                }
+                else
+                {
+                    @foreach (var log in _status.LatestRunLogs)
+                    {
+                        <div class="log-entry">
+                            <span class="log-time">@log.LoggedAt.ToLocalTime().ToString("HH:mm:ss")</span>
+                            <span class="log-level @log.Level.ToLowerInvariant()">@log.Level</span>
+                            <span class="log-message">@log.Message</span>
+                        </div>
+                    }
+                }
+            </div>
+        </section>
     }
 </div>
 
