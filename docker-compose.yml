@@ -1,0 +1,13 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/BestPI.Frontend/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Postgres: ${POSTGRES_CONNECTION_STRING}
+    ports:
+      - "80:8080"
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

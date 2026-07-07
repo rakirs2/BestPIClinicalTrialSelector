@@ -1,0 +1,132 @@
+﻿@page "/"
+@using BestPI.Frontend.Services
+@inject DbMetricsService MetricsService
+
+<PageTitle>Investigator Rankings</PageTitle>
+
+<div class="hero">
+    <div>
+        <p class="eyebrow">Best PI Clinical Trial Selector</p>
+        <h1>Plan feasibility the way CSRankings surfaces faculty data.</h1>
+        <p class="lede">
+            Toggle filters, scan a dense ranking table, and inspect detailed investigator/site profiles — all backed by live
+            ClinicalTrials.gov data and our aggregation jobs.
+        </p>
+    </div>
+    <div class="db-pill">
+        @if (_dbSize is null)
+        {
+            <span>Loading database metrics…</span>
+        }
+        else
+        {
+            <>
+                <strong>Database size</strong>
+                <span>@_dbSize!.Pretty (@_dbSize!.Bytes.ToString("N0"))</span>
+            </>
+        }
+    </div>
+</div>
+
+<section class="dashboard-grid">
+    <div class="filter-panel">
+        <h2>Filters</h2>
+        <label>
+            Geography
+            <select>
+                <option>United States</option>
+                <option>North America</option>
+                <option>Global</option>
+            </select>
+        </label>
+        <label>
+            Disease Area
+            <select>
+                <option>Cardiology</option>
+                <option>Oncology</option>
+                <option>Neurology</option>
+            </select>
+        </label>
+        <label>
+            Intervention Type
+            <select>
+                <option>Drug</option>
+                <option>Device</option>
+                <option>Biologic</option>
+            </select>
+        </label>
+        <label class="slider">
+            Last Updated Window
+            <input type="range" min="2010" max="2026" value="2023" />
+            <small>Drag to narrow the trial recency range.</small>
+        </label>
+        <button class="tour-button">Launch Guided Tour</button>
+    </div>
+
+    <div class="ranking-panel">
+        <div class="ranking-header">
+            <div>
+                <h2>Investigator Shortlist</h2>
+                <p>Mirrors CSRankings’ dense layout with sortable metrics.</p>
+            </div>
+            <button class="export-button">Export CSV</button>
+        </div>
+
+        <table class="ranking-table">
+            <thead>
+                <tr>
+                    <th>Investigator</th>
+                    <th>Institution</th>
+                    <th>Therapeutic Area</th>
+                    <th>Phase Focus</th>
+                    <th>Composite Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in _sampleRows)
+                {
+                    <tr>
+                        <td>
+                            <strong>@row.Name</strong>
+                            <div class="muted">@row.City</div>
+                        </td>
+                        <td>@row.Institution</td>
+                        <td>@row.TherapeuticArea</td>
+                        <td>@row.Phase</td>
+                        <td>
+                            <div class="score-bar">
+                                <span style="width:@row.Score%"></span>
+                            </div>
+                            <span class="score-value">@row.Score</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    private DbSizeSummary? _dbSize;
+
+    private readonly IReadOnlyList<InvestigatorRow> _sampleRows =
+    [
+        new("Dr. Maya Pierce", "Northwestern Medicine", "Chicago, IL", "Cardiology", "Phase II", 87),
+        new("Dr. Andre Lopes", "Mass General Brigham", "Boston, MA", "Oncology", "Phase III", 82),
+        new("Dr. Priya Raman", "Cedars-Sinai", "Los Angeles, CA", "Neurology", "Phase I", 78)
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _dbSize = await MetricsService.GetDatabaseSizeAsync();
+        }
+        catch
+        {
+            _dbSize = new DbSizeSummary(0, "Unavailable");
+        }
+    }
+
+    private sealed record InvestigatorRow(string Name, string Institution, string City, string TherapeuticArea, string Phase, int Score);
+}
