@@ -1,4 +1,5 @@
 using System.Globalization;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace BestPI.Frontend.Services;
@@ -20,10 +21,12 @@ public record DbHealthSnapshot(
 public class DbMetricsService
 {
     private readonly NpgsqlDataSource _dataSource;
+    private readonly ILogger<DbMetricsService> _logger;
 
-    public DbMetricsService(NpgsqlDataSource dataSource)
+    public DbMetricsService(NpgsqlDataSource dataSource, ILogger<DbMetricsService> logger)
     {
         _dataSource = dataSource;
+        _logger = logger;
     }
 
     public async Task<DbHealthSnapshot> GetHealthAsync(CancellationToken cancellationToken = default)
@@ -65,7 +68,9 @@ FROM stats, vac;
             var sizePretty = reader.IsDBNull(1) ? "0 MB" : reader.GetString(1);
             var uptimeSeconds = reader.IsDBNull(2) ? 0d : reader.GetDouble(2);
             var connections = reader.IsDBNull(3) ? 0 : reader.GetInt32(3);
-            DateTime? lastVacuum = reader.IsDBNull(4) ? null : reader.GetFieldValue<DateTime>(4);
+            DateTime? lastVacuum = reader.IsDBNull(4) ? null : reader.GetDateTime(4);
+
+            await reader.DisposeAsync();
 
             var maxConnections = await GetMaxConnectionsAsync(connection, cancellationToken);
             var utilization = maxConnections == 0 ? 0d : Math.Round(connections / (double)maxConnections * 100d, 2);
@@ -83,8 +88,9 @@ FROM stats, vac;
                 lastVacuum
             );
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to compute database health snapshot");
             return new DbHealthSnapshot(
                 "unreachable",
                 0,
