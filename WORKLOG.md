@@ -14,5 +14,6 @@ Use this file to track medium-to-large tasks, their owners, and status. Update i
 | 2026-07-07 | OpenCode (gpt-5.1-codex)  | Surface scraper telemetry (chunk caps + DB logs + UI feed) | completed | Enforcing non-prod chunk cap, persisting run logs, and wiring `/scraper-status` live log stream. |
 | 2026-07-06 | Maintainer or delegate    | Define MVP PI scoring heuristic                | pending   | Capture scoring dimensions and weighting approach. |
 | 2026-07-06 | Maintainer or delegate    | Prototype feasibility review UI                | pending   | Outline wireframes and data surfacing requirements. |
+| 2026-07-07 | OpenCode (gpt-5.1-codex)  | Harden deploy workflow secrets path (#16)      | completed | Workflow decodes `APP_SSH_KEY_B64`, validates `DEPLOY_GHCR_PAT`, and documents the new secret option. |
 
 Status values: `pending`, `in_progress`, `blocked`, `completed`, or `deferred`.

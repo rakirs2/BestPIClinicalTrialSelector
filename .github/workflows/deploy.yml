@@ -77,14 +77,43 @@ jobs:
       - build
     if: github.ref == 'refs/heads/main'
     steps:
+      - name: Prepare SSH key
+        id: prepare-key
+        shell: bash
+        env:
+          APP_SSH_KEY: ${{ secrets.APP_SSH_KEY }}
+          APP_SSH_KEY_B64: ${{ secrets.APP_SSH_KEY_B64 }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${APP_SSH_KEY}" ]]; then
+            KEY_CONTENT="${APP_SSH_KEY}"
+          elif [[ -n "${APP_SSH_KEY_B64}" ]]; then
+            KEY_CONTENT="$(echo "${APP_SSH_KEY_B64}" | base64 --decode)"
+          else
+            echo "APP_SSH_KEY or APP_SSH_KEY_B64 secret is required for deploy" >&2
+            exit 1
+          fi
+          echo "::add-mask::${KEY_CONTENT}"
+          {
+            echo "private_key<<'EOF'"
+            echo "${KEY_CONTENT}"
+            echo "EOF"
+          } >>"$GITHUB_OUTPUT"
+
+      - name: Validate deploy secrets
+        run: |
+          : "${GHCR_TOKEN:?DEPLOY_GHCR_PAT secret is required for deploy}"
+        env:
+          GHCR_TOKEN: ${{ secrets.DEPLOY_GHCR_PAT }}
+
       - name: Deploy application
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.APP_HOST }}
           username: ${{ secrets.APP_USER }}
-          key: ${{ secrets.APP_SSH_KEY }}
+          key: ${{ steps.prepare-key.outputs.private_key }}
           script: |
-            export GHCR_TOKEN="${{ secrets.GHCR_PAT }}"
+            export GHCR_TOKEN="${{ secrets.DEPLOY_GHCR_PAT }}"
             export GHCR_USERNAME="${{ github.repository_owner }}"
             export REPO_DIR="/opt/bestpi"
             bash ${REPO_DIR}/scripts/deploy_app.sh main
