@@ -10,3 +10,4 @@ obj/
 **/obj/
 *.user
 *.suo
+**/wwwroot/lib/
