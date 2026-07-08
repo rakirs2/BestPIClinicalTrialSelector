@@ -106,6 +106,7 @@ jobs:
             export GHCR_USERNAME="${{ github.repository_owner }}"
             export GITHUB_REPOSITORY="${{ github.repository }}"
             export REPO_DIR="/opt/bestpi"
+            mkdir -p "${REPO_DIR}"
             bash ${REPO_DIR}/scripts/deploy_app.sh main
 
   deploy-smoke:
