@@ -71,11 +71,19 @@ cd "${REPO_DIR}"
 
 ensure_env_file
 
+if [[ -z "${FRONTEND_IMAGE:-}" ]]; then
+  echo "[deploy] FRONTEND_IMAGE is required (pass via environment before running deploy_app.sh)" >&2
+  exit 1
+fi
+
+export FRONTEND_IMAGE
+
 log "Syncing branch ${BRANCH}"
 git fetch origin
 git checkout "${BRANCH}"
 git reset --hard "origin/${BRANCH}"
 
+log "Deploying image ${FRONTEND_IMAGE}"
 log "Updating frontend service"
 free_port_80
 run_compose down --remove-orphans || true

@@ -1,9 +1,7 @@
 services:
   frontend:
-    image: ${FRONTEND_IMAGE:-bestpi-frontend:dev}
-    build:
-      context: .
-      dockerfile: frontend/BestPI.Frontend/Dockerfile
+    # Image tag injected by the GitHub Actions deploy job (FRONTEND_IMAGE env var)
+    image: ${FRONTEND_IMAGE:?FRONTEND_IMAGE is required}
     env_file:
       - .env.deploy
     environment:
