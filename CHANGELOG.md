@@ -21,3 +21,4 @@ All notable changes to this project will be documented here. The format follows 
 - Simplified the Blazor UI color palette, added a ready-made light/dark toggle, improved mobile nav highlighting, and cleaned up scraper status pills/logs for readability.
 - Deploy workflow now injects `FRONTEND_IMAGE` for Docker Compose, requires GHCR images instead of local builds, and is enforced as a required status check before merging PRs.
 - Home page hero now includes a "Deployment verified" note so humans can confirm the latest build landed.
+- Fixed ThemeToggle to defer JavaScript interop until after the first render, preventing Blazor prerender crashes that surfaced as 500s in production.
