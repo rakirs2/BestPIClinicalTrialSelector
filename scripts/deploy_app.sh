@@ -9,6 +9,19 @@ log() {
   echo "[deploy] $*"
 }
 
+free_port_80() {
+  local ids=()
+  while IFS= read -r cid; do
+    [[ -n "${cid}" ]] && ids+=("${cid}")
+  done < <(docker ps --format '{{.ID}} {{.Ports}}' | awk '/:80->/ {print $1}')
+
+  if [[ ${#ids[@]} -gt 0 ]]; then
+    log "Stopping containers using host port 80: ${ids[*]}"
+    docker stop "${ids[@]}" >/dev/null
+    docker rm "${ids[@]}" >/dev/null || true
+  fi
+}
+
 ensure_env_file() {
   local env_target="${REPO_DIR}/.env.deploy"
   local env_source="${DEPLOY_ENV_FILE:-$(dirname "${REPO_DIR}")/.env.deploy}"
@@ -52,6 +65,7 @@ git checkout "${BRANCH}"
 git reset --hard "origin/${BRANCH}"
 
 log "Updating frontend service"
+free_port_80
 run_compose down --remove-orphans || true
 run_compose pull frontend || true
 run_compose up -d --remove-orphans frontend
