@@ -11,10 +11,6 @@ log() {
 
 ensure_env_file() {
   local env_target="${REPO_DIR}/.env.deploy"
-  if [[ -f "${env_target}" ]]; then
-    return
-  fi
-
   local env_source="${DEPLOY_ENV_FILE:-$(dirname "${REPO_DIR}")/.env.deploy}"
   if [[ ! -f "${env_source}" ]]; then
     echo "[deploy] Missing env file at ${env_source}. Create it with deployment secrets (see README/DEPLOY.md)." >&2
