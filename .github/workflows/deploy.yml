@@ -105,8 +105,14 @@ jobs:
             export GHCR_TOKEN="${{ secrets.DEPLOY_GHCR_PAT }}"
             export GHCR_USERNAME="${{ github.repository_owner }}"
             export GITHUB_REPOSITORY="${{ github.repository }}"
-            export REPO_DIR="/opt/bestpi"
-            mkdir -p "${REPO_DIR}"
+            export REPO_DIR="/opt/bestpi/BestPIClinicalTrialSelector"
+            mkdir -p "$(dirname "${REPO_DIR}")"
+            if [ ! -d "${REPO_DIR}/.git" ]; then
+              echo "Cloning ${GITHUB_REPOSITORY} into ${REPO_DIR}"
+              git clone "https://github.com/${GITHUB_REPOSITORY}.git" "${REPO_DIR}"
+            else
+              echo "Repository already present at ${REPO_DIR}"
+            fi
             bash ${REPO_DIR}/scripts/deploy_app.sh main
 
   deploy-smoke:
