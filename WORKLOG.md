@@ -21,5 +21,6 @@ Use this file to track medium-to-large tasks, their owners, and status. Update i
 | 2026-07-08 | OpenCode (gpt-5.1-codex)  | Enforce deploy success + add local compose      | completed | Compose now requires GHCR images, deploy writes `FRONTEND_IMAGE`, Deploy workflow is required, and local Docker/dev docs were added. |
 | 2026-07-08 | OpenCode (gpt-5.1-codex)  | Expand roadmap + parity doctrine                | completed | README/ARCHITECTURE/DEPLOY/LOCAL_DEV/CONTRIBUTING now capture two-droplet infra, "deploy here deploy there" philosophy, and upcoming scrapers/pages. |
 | 2026-07-08 | OpenCode (gpt-5.1-codex)  | File roadmap issues + link README               | completed | Added Issues #34-#39 for deploy parity, C# migration spike, PubMed/CMS scrapers, search UI, and PI lookup; README roadmap links to them. |
+| 2026-07-08 | OpenCode (gpt-5.1-codex)  | Add deploy health checks + public verification   | completed | Deploy workflow now writes SHA-tagged env files, polls local/public endpoints, and the home page surfaces a "Deployment verified" note for visual confirmation. |
 
 Status values: `pending`, `in_progress`, `blocked`, `completed`, or `deferred`.

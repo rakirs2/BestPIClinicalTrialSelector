@@ -130,3 +130,10 @@ a:hover, .btn-link:hover {
     background: var(--color-danger-bg);
     color: var(--color-danger-text);
 }
+
+.deploy-note {
+    margin: 0.5rem 0 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-success-text);
+}
