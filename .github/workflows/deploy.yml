@@ -91,9 +91,13 @@ jobs:
         run: |
           : "${APP_SSH_KEY:?APP_SSH_KEY secret is required for deploy}"
           : "${GHCR_TOKEN:?DEPLOY_GHCR_PAT secret is required for deploy}"
+          : "${PG_CONN:?DEPLOY_PG_CONN secret is required for deploy}"
+          : "${PG_DSN:?DEPLOY_PG_DSN secret is required for deploy}"
         env:
           APP_SSH_KEY: ${{ secrets.APP_SSH_KEY }}
           GHCR_TOKEN: ${{ secrets.DEPLOY_GHCR_PAT }}
+          PG_CONN: ${{ secrets.DEPLOY_PG_CONN }}
+          PG_DSN: ${{ secrets.DEPLOY_PG_DSN }}
 
       - name: Deploy application
         uses: appleboy/ssh-action@v1.0.3
@@ -114,10 +118,11 @@ jobs:
             else
               echo "Repository already present at ${REPO_DIR}"
             fi
-            if [ ! -f "${DEPLOY_ENV_FILE}" ]; then
-              echo "Required env file ${DEPLOY_ENV_FILE} is missing; create it with deployment secrets (see DEPLOY.md)."
-              exit 1
-            fi
+            cat <<'ENVEOF' > "${DEPLOY_ENV_FILE}"
+ConnectionStrings__Postgres=${{ secrets.DEPLOY_PG_CONN }}
+POSTGRES_DSN=${{ secrets.DEPLOY_PG_DSN }}
+ENVEOF
+            chmod 600 "${DEPLOY_ENV_FILE}"
             bash ${REPO_DIR}/scripts/deploy_app.sh main
 
   deploy-smoke:
