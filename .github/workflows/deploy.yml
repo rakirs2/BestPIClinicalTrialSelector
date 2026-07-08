@@ -122,6 +122,8 @@ jobs:
             ConnectionStrings__Postgres=${{ secrets.DEPLOY_PG_CONN }}
             POSTGRES_DSN=${{ secrets.DEPLOY_PG_DSN }}
             FRONTEND_IMAGE=ghcr.io/${{ github.repository_owner }}/bestpi-frontend:${{ github.sha }}
+            POSTGRES_HOST_OVERRIDE=10.108.0.3
+            POSTGRES_PORT_OVERRIDE=5432
             ENVEOF
             chmod 600 "${DEPLOY_ENV_FILE}"
             export FRONTEND_IMAGE="ghcr.io/${{ github.repository_owner }}/bestpi-frontend:${{ github.sha }}"

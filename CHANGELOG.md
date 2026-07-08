@@ -15,6 +15,7 @@ All notable changes to this project will be documented here. The format follows 
 - Frontend MSTest coverage for scraper telemetry, theme management, and formatting helpers along with a browser-side theme client.
 - Docker-based local development stack (`docker-compose.local.yml`, `LOCAL_DEV.md`) pairing Postgres + Blazor plus updated `.env` guidance.
 - Automated deploy health checks (droplet-side curl plus public endpoint verification) wired into the GitHub Actions Deploy workflow.
+- Postgres host/port override support (env vars + workflow wiring) so multi-droplet deployments connect to the private DB without changing the base connection string.
 
 ### Changed
 - Scraper configuration now infers `SCRAPER_ENV` (or CI context) to cap non-production runs at five API chunks by default while keeping production runs uncapped unless `MAX_CHUNKS`/`--max-chunks` is explicitly set.
