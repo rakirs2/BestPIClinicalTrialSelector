@@ -19,10 +19,11 @@ This repository is at the bootstrap stage. The current milestone focuses on a **
    cd BestPIClinicalTrialSelector
    ```
 2. **Provision Python + Postgres**
-   - Python 3.14 (system interpreter on macOS works).
-   - Local PostgreSQL instance (Docker or native). Create an empty database, e.g. `clinicaltrials`.
+   - Python 3.12+ (system interpreter on macOS works).
+   - Local PostgreSQL instance (Docker or native). Create an empty database, e.g. `clinicaltrials`. You can also rely on `docker-compose.local.yml` (see below) to launch Postgres via Docker.
 3. **Configure environment**
    - Copy `.env.example` to `.env` and update `POSTGRES_DSN` plus optional tuning values.
+   - Populate `ConnectionStrings__Postgres` so the Blazor frontend reuses the same database as the scraper.
    - Non-production runs (`SCRAPER_ENV` set to `development`, `staging`, `test`, `ci`, etc.) automatically stop after five API chunks. Leave `SCRAPER_ENV=production` (or override with `MAX_CHUNKS`/`--max-chunks`) for uncapped production syncs.
    - Set `RESUME_LATEST=true` if you’d like the scraper to automatically pick up the most recent unfinished run.
    - Create a virtual environment and install dependencies:
@@ -57,14 +58,26 @@ dotnet watch run --project frontend/BestPI.Frontend/BestPI.Frontend.csproj
 
 Set a connection string via `ConnectionStrings__Postgres` in `appsettings.Development.json` or an environment variable (`ConnectionStrings__Postgres="Host=localhost;Port=5432;Database=clinicaltrials;Username=postgres;Password=postgres"`).
 
-To preview the same artifact we deploy to DigitalOcean:
+### Local Docker stack
+
+Spin up Postgres plus the Blazor app for local parity:
+
+```bash
+docker compose -f docker-compose.local.yml up --build
+```
+
+Postgres is exposed on `localhost:55432` and the frontend on `http://localhost:8080/`. Tear everything down with `docker compose -f docker-compose.local.yml down -v`.
+
+See `LOCAL_DEV.md` for a full virtualenv + compose workflow.
+
+### Previewing the production artifact
 
 ```bash
 POSTGRES_CONNECTION_STRING="Host=host.docker.internal;Port=5432;Database=clinicaltrials;Username=postgres;Password=postgres" \
   docker-compose up --build frontend
 ```
 
-The compose file maps container port 8080 to host port 80 so you can load `http://localhost/` and hit `http://localhost/api/db-size` without extra tooling.
+The production compose file maps container port 8080 to host port 80 so you can load `http://localhost/` and hit `http://localhost/api/db-size` without extra tooling.
 
 Exposed operational endpoints (also visualized via `/db-health` and `/scraper-status` pages):
 
@@ -76,6 +89,7 @@ Exposed operational endpoints (also visualized via `/db-health` and `/scraper-st
 - Production uses two DigitalOcean droplets (`bestpi-mvp` for the app, `bestpi-db` for PostgreSQL) connected via a private VPC link.
 - Secrets for Docker Compose are written to `/opt/bestpi/.env.deploy` during each GitHub Actions deploy (from the `DEPLOY_PG_CONN` and `DEPLOY_PG_DSN` secrets). The workflow symlinks the file into the repo directory as `.env.deploy` before running Docker Compose, so no manual editing on the droplet is required.
 - GitHub Actions (`.github/workflows/deploy.yml`) builds/pushes the frontend image to GHCR and redeploys the app droplet after every push to `main`. Schema-aware DB deploys are gated separately.
+- The Deploy workflow (specifically the `deploy-app` job) is a required status check—PRs cannot merge until a successful deploy run exists for the exact commit.
 
 See `DEPLOY.md` for the full runbook, required secrets, and manual fallback commands.
 

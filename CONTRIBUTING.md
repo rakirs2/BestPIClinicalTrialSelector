@@ -5,8 +5,9 @@ Thank you for helping build an agent-friendly clinical trial tooling platform. T
 ## Getting Started
 
 - Review `README.md` and `ARCHITECTURE.md` for context and vocabulary.
-- Install Python 3.14, PostgreSQL, and create a virtual environment (`python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`).
+- Install Python 3.12+, PostgreSQL (or use `docker-compose.local.yml`), and create a virtual environment (`python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`).
 - Copy `.env.example` to `.env`, set `POSTGRES_DSN`, and keep secrets out of git.
+- Review `LOCAL_DEV.md` if you prefer running everything via Docker Compose.
 - Create a GitHub issue for anything non-trivial so the backlog remains visible to both humans and agents.
 
 ## Branch & Pull Request Workflow
@@ -14,7 +15,8 @@ Thank you for helping build an agent-friendly clinical trial tooling platform. T
 1. Branch from `main` using `feature/<context>`, `fix/<context>`, or `docs/<context>` naming.
 2. Keep commits focused and include descriptive messages.
 3. Run all available tests or linters before opening a pull request. Record the commands you executed in the PR description.
-4. Reference the relevant issue ID, add reviewers, and attach screenshots/logs when UI or CLI behavior changes.
+4. Trigger the `Deploy` workflow for your branch (smoke optional, production required) and wait for the `deploy-app` job to succeed—the Deploy workflow is a required status check, so PRs cannot merge without it. Link the successful run in the PR body.
+5. Reference the relevant issue ID, add reviewers, and attach screenshots/logs when UI or CLI behavior changes.
 
 ## Documentation & Log Expectations
 
