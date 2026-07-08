@@ -123,6 +123,8 @@ jobs:
             POSTGRES_DSN=${{ secrets.DEPLOY_PG_DSN }}
             ENVEOF
             chmod 600 "${DEPLOY_ENV_FILE}"
+            export FRONTEND_IMAGE="ghcr.io/${{ github.repository_owner }}/bestpi-frontend:${GITHUB_SHA}"
+            echo "Deploying ${FRONTEND_IMAGE}"
             bash ${REPO_DIR}/scripts/deploy_app.sh main
 
   deploy-smoke:
