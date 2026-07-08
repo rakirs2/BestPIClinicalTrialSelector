@@ -1,56 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_DIR=${REPO_DIR:-/opt/bestpi}
+REPO_DIR=${REPO_DIR:-/opt/bestpi/BestPIClinicalTrialSelector}
 BRANCH=${1:-main}
 GHCR_USERNAME=${GHCR_USERNAME:-rakirs2}
 
 log() {
   echo "[deploy] $*"
-}
-
-ensure_repo_dir() {
-  local repo_name=""
-  if [[ -n "${GITHUB_REPOSITORY:-}" ]]; then
-    repo_name="${GITHUB_REPOSITORY##*/}"
-  fi
-
-  if [[ -d "${REPO_DIR}/.git" ]]; then
-    log "Using repository at ${REPO_DIR}"
-    return
-  fi
-
-  local -a candidates=()
-  candidates+=("${REPO_DIR}")
-  if [[ -n "${repo_name}" ]]; then
-    candidates+=("${REPO_DIR}/${repo_name}")
-  fi
-  candidates+=("${REPO_DIR}/BestPIClinicalTrialSelector")
-
-  for candidate in "${candidates[@]}"; do
-    if [[ -d "${candidate}/.git" ]]; then
-      REPO_DIR="${candidate}"
-      log "Found repository at ${REPO_DIR}"
-      return
-    fi
-  done
-
-  if [[ -n "${GITHUB_REPOSITORY:-}" ]]; then
-    local target="${REPO_DIR}"
-    if [[ -d "${REPO_DIR}" && -n "${repo_name}" && -n "$(ls -A "${REPO_DIR}" 2>/dev/null)" ]]; then
-      target="${REPO_DIR}/${repo_name}"
-    fi
-    log "Repository not found locally; cloning ${GITHUB_REPOSITORY} into ${target}"
-    mkdir -p "${target}"
-    if [[ ! -d "${target}/.git" ]]; then
-      git clone "https://github.com/${GITHUB_REPOSITORY}.git" "${target}"
-    fi
-    REPO_DIR="${target}"
-    return
-  fi
-
-  echo "${REPO_DIR} is not a git repository and GITHUB_REPOSITORY is unset" >&2
-  exit 1
 }
 
 run_compose() {
@@ -69,7 +25,10 @@ if [[ -n "${GHCR_TOKEN:-}" ]]; then
   echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin >/dev/null
 fi
 
-ensure_repo_dir
+if [[ ! -d "${REPO_DIR}/.git" ]]; then
+  echo "[deploy] Expected git repository at ${REPO_DIR} but .git was not found" >&2
+  exit 1
+fi
 
 cd "${REPO_DIR}"
 
