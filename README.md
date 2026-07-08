@@ -154,6 +154,11 @@ See `ARCHITECTURE.md` for the detailed ingestion pipeline and future .NET servic
 - Ship an MVP scoring heuristic with basic UI output.
 - Add automated tests and deployment pipeline.
 - Add blue/green (or rolling) deployment strategy for the Blazor frontend to avoid downtime.
+- Reconsider Dockerization + deployment parity (two DigitalOcean droplets: Postgres + app/jobs) so "if it deploys locally, it deploys remotely" becomes enforceable ([Issue #34](https://github.com/rakirs2/BestPIClinicalTrialSelector/issues/34)).
+- Evaluate rewriting all scrapers in C# to maintain a single stack with shared libraries/models ([Issue #35](https://github.com/rakirs2/BestPIClinicalTrialSelector/issues/35)).
+- Add PubMed and CMS scrapers to enrich investigator profiles with publication history and claims/coverage context ([Issue #36](https://github.com/rakirs2/BestPIClinicalTrialSelector/issues/36), [Issue #37](https://github.com/rakirs2/BestPIClinicalTrialSelector/issues/37)).
+- Build a keyword-driven search page for protocol/condition/intervention filtering ([Issue #38](https://github.com/rakirs2/BestPIClinicalTrialSelector/issues/38)).
+- Build a principal investigator lookup page with detailed history, site performance, and cross-dataset signals ([Issue #39](https://github.com/rakirs2/BestPIClinicalTrialSelector/issues/39)).
 
 ## License
 
