@@ -9,6 +9,22 @@ log() {
   echo "[deploy] $*"
 }
 
+ensure_env_file() {
+  local env_target="${REPO_DIR}/.env.deploy"
+  if [[ -f "${env_target}" ]]; then
+    return
+  fi
+
+  local env_source="${DEPLOY_ENV_FILE:-$(dirname "${REPO_DIR}")/.env.deploy}"
+  if [[ ! -f "${env_source}" ]]; then
+    echo "[deploy] Missing env file at ${env_source}. Create it with deployment secrets (see README/DEPLOY.md)." >&2
+    exit 1
+  fi
+
+  ln -sf "${env_source}" "${env_target}"
+  log "Linked ${env_target} -> ${env_source}"
+}
+
 run_compose() {
   if command -v docker-compose >/dev/null 2>&1; then
     docker-compose "$@"
@@ -31,6 +47,8 @@ if [[ ! -d "${REPO_DIR}/.git" ]]; then
 fi
 
 cd "${REPO_DIR}"
+
+ensure_env_file
 
 log "Syncing branch ${BRANCH}"
 git fetch origin

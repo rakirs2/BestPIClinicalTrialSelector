@@ -21,7 +21,7 @@ The app droplet connects to Postgres via the VPC private address; the local Post
   3. `deploy-app` – SSHes into `bestpi-mvp`, writes secrets to a temporary `.env.runtime`, runs `docker compose up -d`, and removes the file.
   4. `deploy-db` – fires only when schema files change; currently reminds maintainers to run migrations manually.
 
-Before calling `scripts/deploy_app.sh`, the workflow clones (or reuses) the repository at `/opt/bestpi/BestPIClinicalTrialSelector` on the droplet. The deploy script assumes that path already contains a git checkout and exits with a clear error if `.git` is missing, so no manual bootstrap is required when rebuilding the server.
+Before calling `scripts/deploy_app.sh`, the workflow clones (or reuses) the repository at `/opt/bestpi/BestPIClinicalTrialSelector` on the droplet. It also ensures `/opt/bestpi/.env.deploy` exists and symlinks it into the repo as `.env.deploy` so Docker Compose always has the required secrets without duplicating sensitive files. The deploy script assumes both the repo checkout and env file are present and exits with a clear error if either is missing.
 
 ### Required repository secrets
 
@@ -35,6 +35,8 @@ Before calling `scripts/deploy_app.sh`, the workflow clones (or reuses) the repo
 | `DEPLOY_PG_DSN`     | Value for `POSTGRES_CONNECTION_STRING` (used by Python scrapers/CLIs).                |
 
 `GITHUB_TOKEN` handles `docker push`. The PAT is only needed during `docker pull` on the droplet.
+
+Set `DEPLOY_ENV_FILE` when calling `scripts/deploy_app.sh` if your secrets file lives somewhere other than `/opt/bestpi/.env.deploy`; otherwise the default location is used.
 
 ### Database migrations
 

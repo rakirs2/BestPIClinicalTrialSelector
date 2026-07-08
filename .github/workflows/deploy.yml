@@ -106,12 +106,17 @@ jobs:
             export GHCR_USERNAME="${{ github.repository_owner }}"
             export GITHUB_REPOSITORY="${{ github.repository }}"
             export REPO_DIR="/opt/bestpi/BestPIClinicalTrialSelector"
+            export DEPLOY_ENV_FILE="/opt/bestpi/.env.deploy"
             mkdir -p "$(dirname "${REPO_DIR}")"
             if [ ! -d "${REPO_DIR}/.git" ]; then
               echo "Cloning ${GITHUB_REPOSITORY} into ${REPO_DIR}"
               git clone "https://github.com/${GITHUB_REPOSITORY}.git" "${REPO_DIR}"
             else
               echo "Repository already present at ${REPO_DIR}"
+            fi
+            if [ ! -f "${DEPLOY_ENV_FILE}" ]; then
+              echo "Required env file ${DEPLOY_ENV_FILE} is missing; create it with deployment secrets (see DEPLOY.md)."
+              exit 1
             fi
             bash ${REPO_DIR}/scripts/deploy_app.sh main
 
