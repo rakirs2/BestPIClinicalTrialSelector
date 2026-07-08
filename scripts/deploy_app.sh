@@ -52,5 +52,7 @@ git checkout "${BRANCH}"
 git reset --hard "origin/${BRANCH}"
 
 log "Updating frontend service"
+run_compose stop frontend || true
+run_compose rm -f frontend || true
 run_compose pull frontend || true
 run_compose up -d --remove-orphans frontend
