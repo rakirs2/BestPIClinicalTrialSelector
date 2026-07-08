@@ -104,6 +104,7 @@ jobs:
           script: |
             export GHCR_TOKEN="${{ secrets.DEPLOY_GHCR_PAT }}"
             export GHCR_USERNAME="${{ github.repository_owner }}"
+            export GITHUB_REPOSITORY="${{ github.repository }}"
             export REPO_DIR="/opt/bestpi"
             bash ${REPO_DIR}/scripts/deploy_app.sh main
 
