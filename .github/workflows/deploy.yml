@@ -119,9 +119,9 @@ jobs:
               echo "Repository already present at ${REPO_DIR}"
             fi
             cat <<'ENVEOF' > "${DEPLOY_ENV_FILE}"
-ConnectionStrings__Postgres=${{ secrets.DEPLOY_PG_CONN }}
-POSTGRES_DSN=${{ secrets.DEPLOY_PG_DSN }}
-ENVEOF
+            ConnectionStrings__Postgres=${{ secrets.DEPLOY_PG_CONN }}
+            POSTGRES_DSN=${{ secrets.DEPLOY_PG_DSN }}
+            ENVEOF
             chmod 600 "${DEPLOY_ENV_FILE}"
             bash ${REPO_DIR}/scripts/deploy_app.sh main
 
