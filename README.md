@@ -74,7 +74,7 @@ Exposed operational endpoints (also visualized via `/db-health` and `/scraper-st
 ## Deployment
 
 - Production uses two DigitalOcean droplets (`bestpi-mvp` for the app, `bestpi-db` for PostgreSQL) connected via a private VPC link.
-- Secrets for Docker Compose live in `/opt/bestpi/.env.deploy` so rsync and GitHub Actions do not overwrite them. Include both `ConnectionStrings__Postgres` (for ASP.NET) and `POSTGRES_DSN` (for Python tooling).
+- Secrets for Docker Compose live in `/opt/bestpi/.env.deploy` so rsync and GitHub Actions do not overwrite them. The deploy workflow automatically symlinks this file into the repo directory as `.env.deploy` before running Compose. Include both `ConnectionStrings__Postgres` (for ASP.NET) and `POSTGRES_DSN` (for Python tooling).
 - GitHub Actions (`.github/workflows/deploy.yml`) builds/pushes the frontend image to GHCR and redeploys the app droplet after every push to `main`. Schema-aware DB deploys are gated separately.
 
 See `DEPLOY.md` for the full runbook, required secrets, and manual fallback commands.
