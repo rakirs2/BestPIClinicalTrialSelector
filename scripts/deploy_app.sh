@@ -19,6 +19,18 @@ free_port_80() {
     log "Stopping containers using host port 80: ${ids[*]}"
     docker stop "${ids[@]}" >/dev/null
     docker rm "${ids[@]}" >/dev/null || true
+  else
+    log "No docker containers currently publishing host port 80"
+  fi
+
+  local pids=()
+  while IFS= read -r pid; do
+    [[ -n "${pid}" ]] && pids+=("${pid}")
+  done < <(lsof -ti tcp:80 2>/dev/null || true)
+
+  if [[ ${#pids[@]} -gt 0 ]]; then
+    log "Killing host processes listening on port 80: ${pids[*]}"
+    kill "${pids[@]}" >/dev/null || true
   fi
 }
 
