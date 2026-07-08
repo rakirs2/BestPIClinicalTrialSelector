@@ -1,0 +1,72 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - dependencies
+      - ci
+    open-pull-requests-limit: 5
+    target-branch: main
+    automerged_updates:
+      - match:
+          dependency-type: "direct"
+          update-type: "version-update:semver-patch"
+      - match:
+          dependency-type: "direct"
+          update-type: "version-update:semver-minor"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - dependencies
+      - python
+    allow:
+      - dependency-type: "direct"
+    automerged_updates:
+      - match:
+          dependency-type: "direct"
+          update-type: "version-update:semver-patch"
+
+  - package-ecosystem: "docker"
+    directory: "/frontend/BestPI.Frontend"
+    schedule:
+      interval: "weekly"
+    labels:
+      - dependencies
+      - docker
+    automerged_updates:
+      - match:
+          dependency-type: "direct"
+          update-type: "version-update:semver-patch"
+
+  - package-ecosystem: "nuget"
+    directory: "/frontend/BestPI.Frontend"
+    schedule:
+      interval: "weekly"
+    labels:
+      - dependencies
+      - dotnet
+    allow:
+      - dependency-type: "direct"
+    automerged_updates:
+      - match:
+          dependency-type: "direct"
+          update-type: "version-update:semver-patch"
+
+  - package-ecosystem: "nuget"
+    directory: "/frontend/BestPI.Frontend.Tests"
+    schedule:
+      interval: "weekly"
+    labels:
+      - dependencies
+      - dotnet
+    allow:
+      - dependency-type: "direct"
+    automerged_updates:
+      - match:
+          dependency-type: "direct"
+          update-type: "version-update:semver-patch"

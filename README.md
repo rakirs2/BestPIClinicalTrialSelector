@@ -79,6 +79,11 @@ Exposed operational endpoints (also visualized via `/db-health` and `/scraper-st
 
 See `DEPLOY.md` for the full runbook, required secrets, and manual fallback commands.
 
+## Automated Dependency Updates
+
+- Dependabot (see `.github/dependabot.yml`) monitors GitHub Actions, Python requirements, Dockerfiles, and .NET projects weekly. Each PR is labelled `dependencies` plus a language-specific tag and targets `main`.
+- `.github/workflows/dependabot-auto-merge.yml` automatically approves Dependabot PRs and enables auto-merge for non-major updates once CI succeeds, so security patches and minor fixes land without human intervention.
+
 ### Resuming & Monitoring
 
 - View recent ingest runs (status, processed count, notes):
