@@ -42,6 +42,12 @@ Set `DEPLOY_ENV_FILE` when calling `scripts/deploy_app.sh` if your secrets file 
 
 The Deploy workflow (specifically the `deploy-app` job) is marked as a required status check for `main`. Trigger the workflow—either by pushing to the PR branch or running it manually via **Actions → Deploy → Run workflow**—and wait for the job to succeed before merging. Update repository settings if needed: **Settings → Branches → main → Require status checks → Deploy**.
 
+### Reproducible environments mantra
+
+- Production relies on exactly two droplets: `bestpi-mvp` (frontend + background jobs) and `bestpi-db` (Postgres). No other hosts should run first-party code.
+- Every container pulled in production must already be built/tested locally (or in CI) via `docker compose -f docker-compose.local.yml build`. Avoid ad-hoc SSH builds.
+- Before running the Deploy workflow, ensure the local compose stack (`docker-compose.local.yml`) works end-to-end; this keeps the "if it deploys here, it deploys there" promise credible.
+
 ### Database migrations
 
 `deploy-db` simply produces a heads-up today. When it runs, connect to `bestpi-db`, snapshot, apply migrations manually (e.g., via `psql`), and update this document once automation lands.

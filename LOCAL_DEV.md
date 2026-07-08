@@ -1,6 +1,6 @@
 # Local Development Guide
 
-Use this guide to spin up the Best PI Clinical Trial Selector stack entirely on your laptop. The goal is a repeatable workflow for debugging the Blazor frontend and the Python ingestion jobs against a disposable Postgres instance.
+Use this guide to spin up the Best PI Clinical Trial Selector stack entirely on your laptop. The goal is a repeatable workflow for debugging the Blazor frontend and the Python ingestion jobs against a disposable Postgres instance. Our deployment philosophy is "if it deploys here, it deploys there"—local Docker builds are the same artifacts that GitHub Actions pushes to GHCR and the DigitalOcean droplets.
 
 ## Prerequisites
 
@@ -74,3 +74,9 @@ deactivate  # leave the virtualenv
 ```
 
 You now have a reproducible loop: stand up the stack, run scrapers/tests, iterate on the Blazor UI, and tear everything down when finished.
+
+## Parity checklist before opening a PR
+
+1. Build the frontend image locally (`docker compose -f docker-compose.local.yml build frontend`).
+2. Run `docker compose -f docker-compose.local.yml up` and verify the site loads plus scraper APIs respond.
+3. Only after local success should you push and trigger the Deploy workflow—production uses the same GHCR image built locally/CI.

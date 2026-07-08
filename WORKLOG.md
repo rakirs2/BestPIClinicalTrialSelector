@@ -19,5 +19,6 @@ Use this file to track medium-to-large tasks, their owners, and status. Update i
 | 2026-07-07 | OpenCode (gpt-5.1-codex)  | Harden deploy workflow secrets path (#16)      | completed | Workflow decodes `APP_SSH_KEY_B64`, validates `DEPLOY_GHCR_PAT`, and documents the new secret option. |
 | 2026-07-07 | OpenCode (gpt-5.1-codex)  | Add deploy smoke test + simplify key handling  | completed | Workflow now relies on raw `APP_SSH_KEY`, passes it directly to appleboy, and adds a `workflow_dispatch` smoke run. |
 | 2026-07-08 | OpenCode (gpt-5.1-codex)  | Enforce deploy success + add local compose      | completed | Compose now requires GHCR images, deploy writes `FRONTEND_IMAGE`, Deploy workflow is required, and local Docker/dev docs were added. |
+| 2026-07-08 | OpenCode (gpt-5.1-codex)  | Expand roadmap + parity doctrine                | completed | README/ARCHITECTURE/DEPLOY/LOCAL_DEV/CONTRIBUTING now capture two-droplet infra, "deploy here deploy there" philosophy, and upcoming scrapers/pages. |
 
 Status values: `pending`, `in_progress`, `blocked`, `completed`, or `deferred`.

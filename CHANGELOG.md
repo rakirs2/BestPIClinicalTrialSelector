@@ -19,3 +19,4 @@ All notable changes to this project will be documented here. The format follows 
 - Scraper configuration now infers `SCRAPER_ENV` (or CI context) to cap non-production runs at five API chunks by default while keeping production runs uncapped unless `MAX_CHUNKS`/`--max-chunks` is explicitly set.
 - Simplified the Blazor UI color palette, added a ready-made light/dark toggle, improved mobile nav highlighting, and cleaned up scraper status pills/logs for readability.
 - Deploy workflow now injects `FRONTEND_IMAGE` for Docker Compose, requires GHCR images instead of local builds, and is enforced as a required status check before merging PRs.
+- Expanded roadmap, architecture, and contributor docs to cover the two-droplet deployment model, local/production parity mantra, and upcoming scrapers/pages (PubMed, CMS, search, PI lookup, potential C# rewrite).

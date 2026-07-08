@@ -168,6 +168,11 @@ See `ARCHITECTURE.md` for the detailed ingestion pipeline and future .NET servic
 - Ship an MVP scoring heuristic with basic UI output.
 - Add automated tests and deployment pipeline.
 - Add blue/green (or rolling) deployment strategy for the Blazor frontend to avoid downtime.
+- Reconsider Dockerization + deployment parity (two DigitalOcean droplets: Postgres + app/jobs) so "if it deploys locally, it deploys remotely" becomes enforceable.
+- Evaluate rewriting all scrapers in C# to maintain a single stack with shared libraries/models.
+- Add PubMed and CMS scrapers to enrich investigator profiles with publication history and claims/coverage context.
+- Build a keyword-driven search page for protocol/condition/intervention filtering.
+- Build a principal investigator lookup page with detailed history, site performance, and cross-dataset signals.
 
 ## License
 

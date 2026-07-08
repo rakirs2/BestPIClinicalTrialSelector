@@ -15,8 +15,9 @@ Thank you for helping build an agent-friendly clinical trial tooling platform. T
 1. Branch from `main` using `feature/<context>`, `fix/<context>`, or `docs/<context>` naming.
 2. Keep commits focused and include descriptive messages.
 3. Run all available tests or linters before opening a pull request. Record the commands you executed in the PR description.
-4. Trigger the `Deploy` workflow for your branch (smoke optional, production required) and wait for the `deploy-app` job to succeed—the Deploy workflow is a required status check, so PRs cannot merge without it. Link the successful run in the PR body.
-5. Reference the relevant issue ID, add reviewers, and attach screenshots/logs when UI or CLI behavior changes.
+4. Validate the Docker-based local stack (`docker compose -f docker-compose.local.yml up`) so we know the GHCR image will behave identically on DigitalOcean—"if it deploys here, it deploys there."
+5. Trigger the `Deploy` workflow for your branch (smoke optional, production required) and wait for the `deploy-app` job to succeed—the Deploy workflow is a required status check, so PRs cannot merge without it. Link the successful run in the PR body.
+6. Reference the relevant issue ID, add reviewers, and attach screenshots/logs when UI or CLI behavior changes.
 
 ## Documentation & Log Expectations
 

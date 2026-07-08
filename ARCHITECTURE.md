@@ -8,7 +8,7 @@ Best PI Clinical Trial Selector is envisioned as a modular decision-support plat
    - **Current milestone**: Python scraper (`scrapers/clinicaltrials`) streaming the ClinicalTrials.gov v2 API into PostgreSQL.
    - Tracks ingest runs, stores the full JSON payload for every study (`raw_study_payloads`), and tabulates sponsors, conditions, interventions, outcomes, eligibility, investigators, and contacts.
    - Enforces a configurable database size ceiling (default 10 GB) with graceful shutdown and progress reporting.
-   - Future connectors: CTMS, EDC, EU CTR, publication data.
+   - Future connectors: CTMS, EDC, EU CTR, PubMed (publications), CMS datasets (claims/coverage), with a likely migration of ingestion jobs to C# for stack consistency.
 
 2. **Feature Store & Storage**
    - Cleansed, versioned data sets describing investigators, sites, studies, and operational metrics.
@@ -38,6 +38,14 @@ External Sources -> Ingestion Jobs -> Feature Store -> Scoring Engine -> API Lay
 - **Security**: Segregate PHI/PII, enforce least-privilege access, and log access events.
 - **Extensibility**: Design connectors and scoring modules as pluggable units.
 - **Observability**: Monitor ingestion freshness, scoring latency, and UI/API health.
+- **Parity**: Every deployable artifact must be reproducible locally via Docker Compose; the production droplets should only run images that have already been validated locally.
+
+## Deployment Topology & Parity Principles
+
+- **Droplet layout**: Two DigitalOcean droplets—one dedicated to PostgreSQL, the other hosting the Blazor frontend and long-running/background jobs (scrapers, aggregations, schedulers).
+- **Containers everywhere**: Both local and remote environments rely on Docker images stored in GHCR; the production compose stack never builds from source.
+- **Reproducible workflow**: Developers must be able to run `docker compose up` locally (mirroring production services) prior to triggering the GitHub Actions deploy. The mantra is "if it deploys here, it deploys there".
+- **Background jobs**: Scrapers and aggregations run as services/containers on the app droplet; future work will determine whether these become separate Kubernetes workloads or remain compose services.
 
 ## Near-Term Decisions
 
@@ -45,6 +53,7 @@ External Sources -> Ingestion Jobs -> Feature Store -> Scoring Engine -> API Lay
 - Choose storage solution for the feature store (cloud warehouse vs. managed Postgres).
 - Define minimal schema for investigators, sites, studies, and scoring outputs.
 - Establish deployment target and CI/CD strategy.
+- Decide whether all ingestion jobs should be rewritten in C# to align with the Blazor/.NET stack (shared models, logging, deployment).
 
 Update this document whenever component boundaries, data contracts, or system constraints change.
 ### ClinicalTrials.gov Ingestion Flow
