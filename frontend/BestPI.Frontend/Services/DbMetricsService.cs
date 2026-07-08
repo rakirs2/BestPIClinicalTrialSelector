@@ -15,7 +15,8 @@ public record DbHealthSnapshot(
     int MaxConnections,
     double ConnectionUtilization,
     DateTime CheckedAt,
-    DateTime? LastVacuum
+    DateTime? LastVacuum,
+    string? Error
 );
 
 public class DbMetricsService
@@ -85,7 +86,8 @@ FROM stats, vac;
                 maxConnections,
                 utilization,
                 DateTime.UtcNow,
-                lastVacuum
+                lastVacuum,
+                null
             );
         }
         catch (Exception ex)
@@ -100,7 +102,8 @@ FROM stats, vac;
                 0,
                 0,
                 DateTime.UtcNow,
-                null
+                null,
+                ex.Message
             );
         }
     }
