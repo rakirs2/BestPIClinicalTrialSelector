@@ -100,7 +100,7 @@ jobs:
           PG_DSN: ${{ secrets.DEPLOY_PG_DSN }}
 
       - name: Deploy application
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.APP_HOST }}
           username: ${{ secrets.APP_USER }}
@@ -142,7 +142,7 @@ jobs:
           GHCR_TOKEN: ${{ secrets.DEPLOY_GHCR_PAT }}
 
       - name: Verify SSH connectivity
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.APP_HOST }}
           username: ${{ secrets.APP_USER }}
