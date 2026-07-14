@@ -33,6 +33,14 @@
     }
     else
     {
+        if (!string.IsNullOrWhiteSpace(_health.Error))
+        {
+            <div class="error-banner subtle">
+                <strong>Database connection error:</strong>
+                <span>@_health.Error</span>
+            </div>
+        }
+
         <section class="metrics-grid">
             <article class="metric-card">
                 <header>

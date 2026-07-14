@@ -90,6 +90,8 @@ Exposed operational endpoints (also visualized via `/db-health` and `/scraper-st
 - Secrets for Docker Compose are written to `/opt/bestpi/.env.deploy` during each GitHub Actions deploy (from the `DEPLOY_PG_CONN` and `DEPLOY_PG_DSN` secrets). The workflow symlinks the file into the repo directory as `.env.deploy` before running Docker Compose, so no manual editing on the droplet is required.
 - GitHub Actions (`.github/workflows/deploy.yml`) builds/pushes the frontend image to GHCR and redeploys the app droplet after every push to `main`. Schema-aware DB deploys are gated separately.
 - The Deploy workflow (specifically the `deploy-app` job) is a required status check—PRs cannot merge until a successful deploy run exists for the exact commit.
+- Deploys now include automated health checks: the droplet polls `http://localhost/api/db-size`, and the workflow curls `http://<APP_HOST>/api/db-size` before reporting success.
+- For multi-droplet setups, set `POSTGRES_HOST_OVERRIDE`/`POSTGRES_PORT_OVERRIDE` (the workflow writes `10.108.0.3:5432` by default) so the Blazor app connects to the private Postgres host even if your base connection string uses `localhost`.
 
 See `DEPLOY.md` for the full runbook, required secrets, and manual fallback commands.
 

@@ -12,13 +12,19 @@
 
 @code {
     private string _currentValue = ThemePreference.System.ToString().ToLowerInvariant();
-    private bool _initialized;
+    private bool _ready;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender || _ready)
+        {
+            return;
+        }
+
         await ThemeService.InitializeAsync();
         _currentValue = ThemeService.Current.ToString().ToLowerInvariant();
-        _initialized = true;
+        _ready = true;
+        StateHasChanged();
     }
 
     private async Task OnThemeChanged(ChangeEventArgs args)
@@ -35,7 +41,7 @@
 
         _currentValue = raw.ToLowerInvariant();
 
-        if (_initialized)
+        if (_ready)
         {
             await ThemeService.SetThemeAsync(preference);
         }

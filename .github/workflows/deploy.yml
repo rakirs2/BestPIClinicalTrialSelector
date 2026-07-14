@@ -118,14 +118,30 @@ jobs:
             else
               echo "Repository already present at ${REPO_DIR}"
             fi
-            cat <<'ENVEOF' > "${DEPLOY_ENV_FILE}"
+            cat <<ENVEOF > "${DEPLOY_ENV_FILE}"
             ConnectionStrings__Postgres=${{ secrets.DEPLOY_PG_CONN }}
             POSTGRES_DSN=${{ secrets.DEPLOY_PG_DSN }}
+            FRONTEND_IMAGE=ghcr.io/${{ github.repository_owner }}/bestpi-frontend:${{ github.sha }}
+            POSTGRES_HOST_OVERRIDE=10.108.0.3
+            POSTGRES_PORT_OVERRIDE=5432
             ENVEOF
             chmod 600 "${DEPLOY_ENV_FILE}"
-            export FRONTEND_IMAGE="ghcr.io/${{ github.repository_owner }}/bestpi-frontend:${GITHUB_SHA}"
+            export FRONTEND_IMAGE="ghcr.io/${{ github.repository_owner }}/bestpi-frontend:${{ github.sha }}"
             echo "Deploying ${FRONTEND_IMAGE}"
             bash ${REPO_DIR}/scripts/deploy_app.sh main
+
+      - name: Verify public endpoint
+        run: |
+          for attempt in {1..12}; do
+            if curl -fsS --max-time 5 "http://${{ secrets.APP_HOST }}/api/db-size" >/dev/null; then
+              echo "Public endpoint healthy"
+              exit 0
+            fi
+            echo "Waiting for public endpoint (attempt ${attempt})"
+            sleep 5
+          done
+          echo "Frontend never became healthy" >&2
+          exit 1
 
   deploy-smoke:
     runs-on: ubuntu-latest

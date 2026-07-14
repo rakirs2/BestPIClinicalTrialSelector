@@ -14,7 +14,21 @@ if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("ConnectionStrings:Postgres is not configured.");
 }
-builder.Services.AddNpgsqlDataSource(connectionString);
+var connectionBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+
+var hostOverride = builder.Configuration["POSTGRES_HOST_OVERRIDE"];
+if (!string.IsNullOrWhiteSpace(hostOverride))
+{
+    connectionBuilder.Host = hostOverride;
+}
+
+var portOverrideRaw = builder.Configuration["POSTGRES_PORT_OVERRIDE"];
+if (!string.IsNullOrWhiteSpace(portOverrideRaw) && int.TryParse(portOverrideRaw, out var portOverride))
+{
+    connectionBuilder.Port = portOverride;
+}
+
+builder.Services.AddNpgsqlDataSource(connectionBuilder.ConnectionString);
 builder.Services.AddScoped<DbMetricsService>();
 builder.Services.AddScoped<IScraperStatusStore, PostgresScraperStatusStore>();
 builder.Services.AddScoped<ScraperStatusService>();

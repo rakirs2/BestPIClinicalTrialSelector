@@ -57,6 +57,29 @@ run_compose() {
   fi
 }
 
+if ! command -v curl >/dev/null 2>&1; then
+  echo "[deploy] curl is required for health checks" >&2
+  exit 1
+fi
+
+wait_for_http() {
+  local url="$1"
+  local attempts=${2:-12}
+  local delay=${3:-5}
+
+  for ((i = 1; i <= attempts; i++)); do
+    if curl -fsS --max-time 5 "${url}" >/dev/null; then
+      log "Health check succeeded for ${url} (attempt ${i})"
+      return 0
+    fi
+    log "Health check failed for ${url} (attempt ${i}/${attempts}); retrying in ${delay}s"
+    sleep "${delay}"
+  done
+
+  log "Health check failed for ${url} after ${attempts} attempts"
+  return 1
+}
+
 if [[ -n "${GHCR_TOKEN:-}" ]]; then
   log "Logging into ghcr.io as ${GHCR_USERNAME}"
   echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin >/dev/null
@@ -89,3 +112,6 @@ free_port_80
 run_compose down --remove-orphans || true
 run_compose pull frontend || true
 run_compose up -d --remove-orphans frontend
+run_compose ps frontend
+
+wait_for_http "http://localhost/api/db-size" 12 5

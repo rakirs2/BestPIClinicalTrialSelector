@@ -21,7 +21,7 @@ The app droplet connects to Postgres via the VPC private address; the local Post
   3. `deploy-app` – SSHes into `bestpi-mvp`, writes secrets to `.env.deploy`, exports `FRONTEND_IMAGE=ghcr.io/<owner>/bestpi-frontend:${GITHUB_SHA}`, and drives `scripts/deploy_app.sh` (which runs `docker compose pull/up`).
   4. `deploy-db` – fires only when schema files change; currently reminds maintainers to run migrations manually.
 
-Before calling `scripts/deploy_app.sh`, the workflow clones (or reuses) the repository at `/opt/bestpi/BestPIClinicalTrialSelector` on the droplet. It renders `/opt/bestpi/.env.deploy` from the `DEPLOY_PG_CONN` and `DEPLOY_PG_DSN` GitHub secrets, then symlinks it into the repo as `.env.deploy` so Docker Compose always has the required secrets without duplicating sensitive files. Right before invoking the script, the workflow exports `FRONTEND_IMAGE=ghcr.io/<owner>/bestpi-frontend:${GITHUB_SHA}` so the compose file pulls the exact image built earlier. The deploy script assumes both the repo checkout and env file are present (and will refuse to continue if `FRONTEND_IMAGE` is missing).
+Before calling `scripts/deploy_app.sh`, the workflow clones (or reuses) the repository at `/opt/bestpi/BestPIClinicalTrialSelector` on the droplet. It renders `/opt/bestpi/.env.deploy` from the `DEPLOY_PG_CONN` and `DEPLOY_PG_DSN` GitHub secrets, then symlinks it into the repo as `.env.deploy` so Docker Compose always has the required secrets without duplicating sensitive files. Right before invoking the script, the workflow exports `FRONTEND_IMAGE=ghcr.io/<owner>/bestpi-frontend:${GITHUB_SHA}` so the compose file pulls the exact image built earlier. The deploy script assumes both the repo checkout and env file are present (and will refuse to continue if `FRONTEND_IMAGE` is missing). The env file also injects `POSTGRES_HOST_OVERRIDE=10.108.0.3` and `POSTGRES_PORT_OVERRIDE=5432` so the Blazor app connects to the `bestpi-db` droplet even if the base connection string still points at `localhost`.
 
 ### Required repository secrets
 
@@ -33,6 +33,8 @@ Before calling `scripts/deploy_app.sh`, the workflow clones (or reuses) the repo
 | `DEPLOY_GHCR_PAT`   | PAT with `read:packages` scope so the droplet can `docker login` to GHCR.             |
 | `DEPLOY_PG_CONN`    | Value for `ConnectionStrings__Postgres` (used by ASP.NET).                            |
 | `DEPLOY_PG_DSN`     | Value for `POSTGRES_CONNECTION_STRING` (used by Python scrapers/CLIs).                |
+| `POSTGRES_HOST_OVERRIDE` | Optional host override (defaults to the private IP of `bestpi-db`).                |
+| `POSTGRES_PORT_OVERRIDE` | Optional port override (defaults to `5432`).                                      |
 
 `GITHUB_TOKEN` handles `docker push`. The PAT is only needed during `docker pull` on the droplet.
 
@@ -41,6 +43,18 @@ Set `DEPLOY_ENV_FILE` when calling `scripts/deploy_app.sh` if your secrets file 
 ### Branch protection requirement
 
 The Deploy workflow (specifically the `deploy-app` job) is marked as a required status check for `main`. Trigger the workflow—either by pushing to the PR branch or running it manually via **Actions → Deploy → Run workflow**—and wait for the job to succeed before merging. Update repository settings if needed: **Settings → Branches → main → Require status checks → Deploy**.
+
+### Reproducible environments mantra
+
+- Production relies on exactly two droplets: `bestpi-mvp` (frontend + background jobs) and `bestpi-db` (Postgres). No other hosts should run first-party code.
+- Every container pulled in production must already be built/tested locally (or in CI) via `docker compose -f docker-compose.local.yml build`. Avoid ad-hoc SSH builds.
+- Before running the Deploy workflow, ensure the local compose stack (`docker-compose.local.yml`) works end-to-end; this keeps the "if it deploys here, it deploys there" promise credible.
+
+### Automated health checks
+
+- `scripts/deploy_app.sh` now refuses to run without `curl`, prints `docker compose ps frontend`, and polls `http://localhost/api/db-size` up to a dozen times before treating the deploy as successful.
+- The Deploy workflow adds a post-SSH verification step that curls `http://${APP_HOST}/api/db-size` with retries, ensuring the public endpoint is reachable before the job turns green.
+- For manual smoke tests, tweak a harmless UI string (e.g., the hero eyebrow) and reload the production site to confirm the change landed.
 
 ### Database migrations
 
